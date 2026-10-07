@@ -1,0 +1,3822 @@
+<!DOCTYPE html>
+<html lang="az">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BakuGo — Admin 15</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@latest/dist/leaflet-routing-machine.css" />
+
+<style>
+body.role-operator .admin-only{display:none!important}
+
+:root{
+  --ink:#12141C;
+  --ink-soft:#1B1E2B;
+  --ink-line:#2B2F41;
+  --accent:#FF5722;
+  --accent-dark:#E64A19;
+  --accent-soft:#FFF0E9;
+  --bg:#F5F6FA;
+  --surface:#FFFFFF;
+  --border:#E7E9F0;
+  --text:#171923;
+  --text-muted:#767C8C;
+  --success:#16A34A;
+  --success-soft:#E8F8EE;
+  --warning:#B8760A;
+  --warning-soft:#FFF6E3;
+  --danger:#E11D48;
+  --danger-soft:#FDEAF0;
+  --radius-lg:18px;
+  --radius-md:12px;
+  --shadow:0 8px 24px rgba(18,20,28,.06);
+  --shadow-lift:0 16px 32px rgba(18,20,28,.10);
+}
+
+*{margin:0;padding:0;box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  font-family:'Inter',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  overflow:hidden;
+}
+h1,h2,h3,.display{font-family:'Sora',sans-serif;}
+button{font-family:inherit;}
+::selection{background:var(--accent-soft);color:var(--accent-dark);}
+
+/* ---------- APP SHELL ---------- */
+.app-shell{display:flex;height:100vh;}
+
+/* ---------- SIDEBAR & MOBILE MENU ---------- */
+.sidebar{
+  width:252px;
+  flex-shrink:0;
+  background:var(--ink);
+  color:#fff;
+  padding:24px 16px;
+  display:flex;
+  flex-direction:column;
+  z-index: 100;
+  transition: left 0.3s ease;
+}
+.sidebar-overlay {
+  display: none;
+  position: fixed; inset: 0; background: rgba(18,20,28,.5); z-index: 90;
+}
+.logo{display:flex;align-items:center;gap:10px;padding:6px 10px 28px;}
+.logo-mark{
+  width:34px;height:34px;
+  border-radius:9px;
+  background:var(--accent);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+}
+.logo-mark svg{width:18px;height:18px;stroke:#fff;}
+.logo-text{font-size:19px;font-weight:700;letter-spacing:.2px;}
+.logo-text span{color:var(--accent);}
+.nav-label{
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#6E7386;
+  padding:0 12px 8px;
+  margin-top:6px;
+}
+.menu{display:flex;flex-direction:column;gap:2px;}
+.menu button{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  width:100%;
+  padding:11px 12px;
+  border:none;
+  border-radius:10px;
+  background:transparent;
+  color:#B7BACB;
+  cursor:pointer;
+  font-size:14.5px;
+  font-weight:500;
+  text-align:left;
+  transition:background .15s ease, color .15s ease;
+}
+.menu button svg{width:18px;height:18px;stroke:currentColor;flex-shrink:0;}
+.menu button:hover{background:var(--ink-soft);color:#fff;}
+.menu button.active{background:var(--accent);color:#fff;}
+.menu button .nav-badge{
+  margin-left:auto;background:rgba(255,255,255,.18);color:#fff;
+  font-size:10.5px;font-weight:700;padding:2px 7px;border-radius:20px;
+}
+.menu button.active .nav-badge{background:rgba(255,255,255,.28);}
+.sidebar-footer{
+  margin-top:auto;
+  padding:14px 12px;
+  border-radius:12px;
+  background:var(--ink-soft);
+  border:1px solid var(--ink-line);
+}
+.sidebar-footer p{font-size:12.5px;color:#9195A7;line-height:1.5;}
+.sidebar-footer b{color:#fff;display:block;font-size:13px;margin-bottom:2px;}
+.sf-status{display:flex;align-items:center;gap:7px;margin-bottom:6px;}
+.sf-status .dot{width:7px;height:7px;border-radius:50%;background:var(--success);box-shadow:0 0 0 3px rgba(22,163,74,.18);flex-shrink:0;}
+.sf-status.bad .dot{background:var(--danger);box-shadow:0 0 0 3px rgba(225,29,72,.18);}
+.logout-link{
+  display:flex;align-items:center;gap:8px;
+  margin-top:10px;
+  background:transparent;border:none;color:#9195A7;
+  font-size:12.5px;font-weight:600;cursor:pointer;padding:0;
+}
+.logout-link:hover{color:#fff;}
+.logout-link svg{width:14px;height:14px;stroke:currentColor;}
+
+/* ---------- MAIN MAIN ---------- */
+.main{flex:1;padding:22px 28px 28px;overflow-y:auto;}
+.topbar{
+  background:var(--surface);
+  padding:14px 18px;
+  border-radius:var(--radius-lg);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  box-shadow:var(--shadow);
+  gap:16px;
+}
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  flex-shrink: 0;
+}
+.hamburger svg { width: 24px; height: 24px; stroke: var(--text); }
+
+.search-wrap{position:relative;width:100%;max-width:360px;}
+.search-wrap svg{position:absolute;left:14px;top:50%;transform:translateY(-50%);width:16px;height:16px;stroke:var(--text-muted);}
+.search{
+  width:100%;
+  padding:11px 14px 11px 40px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  outline:none;
+  font-size:14px;
+  background:var(--bg);
+  transition:border-color .15s ease, background .15s ease;
+}
+.search:focus{border-color:var(--accent);background:var(--surface);}
+.topbar-right{display:flex;align-items:center;gap:18px;flex-shrink:0;margin-left: auto;}
+.icon-btn{
+  width:38px;height:38px;
+  border-radius:10px;
+  border:1px solid var(--border);
+  background:var(--surface);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  position:relative;
+  transition:background .15s ease;
+}
+.icon-btn:hover{background:var(--bg);}
+.icon-btn svg{width:17px;height:17px;stroke:var(--text-muted);}
+.icon-btn .dot{
+  position:absolute;top:8px;right:8px;
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent);
+  border:1.5px solid var(--surface);
+}
+.profile{display:flex;align-items:center;gap:10px;padding-left:14px;border-left:1px solid var(--border);cursor:default;}
+.profile-text b{font-size:13.5px;display:block;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.profile-text span{font-size:12px;color:var(--text-muted);}
+.avatar{
+  width:38px;height:38px;
+  border-radius:10px;
+  background:var(--ink);
+  display:flex;justify-content:center;align-items:center;
+  color:#fff;font-weight:700;font-size:14px;
+  font-family:'Sora',sans-serif;
+  flex-shrink:0;
+}
+
+/* ---------- SECTION HEADER ---------- */
+.section-head{
+  margin-top:26px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  flex-wrap:wrap;
+  gap:12px;
+}
+.section-head h1{font-size:23px;font-weight:700;}
+.section-head p{color:var(--text-muted);font-size:13.5px;margin-top:4px;}
+.btn-primary{
+  padding:11px 18px;
+  background:var(--accent);
+  color:#fff;
+  border:none;
+  border-radius:10px;
+  cursor:pointer;
+  font-size:13.5px;
+  font-weight:600;
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  transition:background .15s ease, transform .15s ease;
+}
+.btn-primary svg{width:15px;height:15px;stroke:#fff;}
+.btn-primary:hover{background:var(--accent-dark);transform:translateY(-1px);}
+.btn-primary:disabled{opacity:.6;cursor:not-allowed;transform:none;}
+.btn-secondary{
+  padding:10px 16px;
+  background:var(--surface);
+  color:var(--text);
+  border:1px solid var(--border);
+  border-radius:10px;
+  cursor:pointer;
+  font-size:13.5px;
+  font-weight:600;
+}
+.btn-secondary:hover{background:var(--bg);}
+.btn-secondary svg{width:15px;height:15px;stroke:var(--text);vertical-align:-3px;margin-right:2px;}
+.btn-ghost-danger{
+  padding:8px 12px;background:transparent;border:1px solid var(--danger-soft);color:var(--danger);
+  border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;
+}
+.btn-ghost-danger:hover{background:var(--danger-soft);}
+.btn-ghost-success{
+  padding:8px 12px;background:transparent;border:1px solid var(--success-soft);color:var(--success);
+  border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;
+}
+.btn-ghost-success:hover{background:var(--success-soft);}
+.btn-ghost{
+  padding:8px 12px;background:transparent;border:1px solid var(--border);color:var(--text-muted);
+  border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;
+}
+.btn-ghost:hover{background:var(--bg);color:var(--text);}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap;}
+
+/* ---------- STAT CARDS ---------- */
+.cards{
+  margin-top:18px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:16px;
+}
+.card{
+  background:var(--surface);
+  padding:20px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow);
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+.card:hover{transform:translateY(-4px);box-shadow:var(--shadow-lift);}
+.card-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.card-icon{
+  width:36px;height:36px;border-radius:10px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--accent-soft);
+}
+.card-icon svg{width:18px;height:18px;stroke:var(--accent-dark);}
+.card h3{font-size:13px;color:var(--text-muted);font-weight:500;margin-top:14px;}
+.card .value{font-size:30px;font-weight:700;margin-top:4px;}
+.trend{font-size:12px;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-top:8px;}
+.trend.up{color:var(--success);}
+.trend.down{color:var(--danger);}
+.trend.flat{color:var(--text-muted);}
+
+/* ---------- BIG BOX / TABLE ---------- */
+.bigBox{
+  margin-top:20px;
+  background:var(--surface);
+  padding:22px;
+  border-radius:var(--radius-lg);
+  box-shadow:var(--shadow);
+}
+.bigBox-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.bigBox-head h2{font-size:16.5px;font-weight:700;}
+.tabs{display:flex;gap:6px;background:var(--bg);padding:4px;border-radius:10px;}
+.tabs button{
+  border:none;background:transparent;padding:7px 13px;border-radius:8px;
+  font-size:12.5px;font-weight:600;color:var(--text-muted);cursor:pointer;
+}
+.tabs button.active{background:var(--surface);color:var(--text);box-shadow:var(--shadow);}
+table{width:100%;border-collapse:collapse;}
+thead th{
+  text-align:left;
+  font-size:11.5px;
+  text-transform:uppercase;
+  letter-spacing:.05em;
+  color:var(--text-muted);
+  font-weight:600;
+  padding:10px 12px;
+  border-bottom:1px solid var(--border);
+}
+tbody td{
+  padding:14px 12px;
+  font-size:13.5px;
+  border-bottom:1px solid var(--border);
+  vertical-align:middle;
+}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover{background:var(--bg);}
+.cell-user{display:flex;align-items:center;gap:10px;}
+.mini-avatar{
+  width:30px;height:30px;border-radius:8px;background:var(--ink);
+  color:#fff;font-size:12px;font-weight:700;font-family:'Sora',sans-serif;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.badge{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:5px 10px;border-radius:20px;
+  font-size:11.5px;font-weight:700;
+  white-space:nowrap;
+  border:none;cursor:default;
+}
+.badge.success{background:var(--success-soft);color:var(--success);}
+.badge.warning{background:var(--warning-soft);color:var(--warning);}
+.badge.danger{background:var(--danger-soft);color:var(--danger);}
+.badge::before{content:'';width:6px;height:6px;border-radius:50%;background:currentColor;}
+.badge.clickable{cursor:pointer;}
+.badge.clickable:hover{filter:brightness(0.95);}
+.badge.neutral{background:#EEF0F6;color:#4B5165;}
+
+/* ---------- ROUTE TRACKER ---------- */
+.route{display:flex;align-items:center;min-width:150px;}
+.route .stage{
+  width:9px;height:9px;border-radius:50%;
+  background:var(--border);
+  flex-shrink:0;
+  position:relative;
+  z-index:1;
+}
+.route .stage.done{background:var(--accent);}
+.route .stage.current{
+  background:var(--accent);
+  box-shadow:0 0 0 4px var(--accent-soft);
+}
+.route .link{flex:1;height:2px;background:var(--border);}
+.route .link.done{background:var(--accent);}
+.route.cancelled .stage{background:var(--border);}
+.route.cancelled .stage.hit{background:var(--danger);}
+.route.cancelled .link{background:var(--border);}
+.route.cancelled .link.hit{background:none;border-top:2px dashed var(--danger);height:0;}
+.route-label{font-size:11px;color:var(--text-muted);margin-top:5px;}
+
+/* ---------- GRID CARDS ---------- */
+.grid-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;margin-top:4px;}
+.entity-card{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:16px;
+  transition:border-color .15s ease, transform .15s ease;
+}
+.entity-card:hover{border-color:var(--accent);transform:translateY(-2px);}
+.entity-card.blocked-card{border-color:var(--danger);background:var(--danger-soft);}
+.entity-top{display:flex;justify-content:space-between;align-items:flex-start;}
+.status-dot{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--success);background:none;border:none;cursor:pointer;padding:0;}
+.status-dot .d{width:7px;height:7px;border-radius:50%;background:var(--success);}
+.status-dot.off{color:var(--text-muted);}
+.status-dot.off .d{background:var(--text-muted);}
+.entity-card h4{font-size:14.5px;margin-top:12px;font-weight:600;}
+.entity-card .meta{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.entity-stats{display:flex;gap:16px;margin-top:14px;padding-top:12px;border-top:1px solid var(--border);}
+.entity-stats div{font-size:12px;color:var(--text-muted);}
+.entity-stats b{display:block;font-size:14.5px;color:var(--text);font-family:'Sora',sans-serif;}
+.entity-foot{display:flex;gap:6px;margin-top:12px;}
+
+/* ---------- CHART CANVAS WRAP ---------- */
+.chart-wrap{position:relative;width:100%;height:220px;margin-top:12px;}
+
+/* ---------- SETTINGS ---------- */
+.settings-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 4px;border-bottom:1px solid var(--border);
+}
+.settings-row:last-child{border-bottom:none;}
+.settings-row h4{font-size:14px;font-weight:600;}
+.settings-row p{font-size:12.5px;color:var(--text-muted);margin-top:3px;}
+.switch{width:42px;height:24px;border-radius:20px;background:var(--border);position:relative;cursor:pointer;flex-shrink:0;transition:background .2s ease;}
+.switch::after{content:'';position:absolute;top:3px;left:3px;width:18px;height:18px;border-radius:50%;background:#fff;transition:left .2s ease;box-shadow:0 1px 3px rgba(0,0,0,.2);}
+.switch.on{background:var(--accent);}
+.switch.on::after{left:21px;}
+.field-group{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-top:14px;}
+.field label{font-size:12.5px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;}
+.field input,.field select,.field textarea{width:100%;padding:10px 12px;border-radius:9px;border:1px solid var(--border);font-size:13.5px;outline:none;background:var(--surface);font-family:inherit;resize:vertical;}
+.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--accent);}
+.hidden{display:none !important;}
+
+/* ---------- KAMPANİYALAR ---------- */
+.campaign-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;margin-top:20px;}
+@media (max-width:900px){.campaign-grid{grid-template-columns:1fr;}}
+.campaign-col .bigBox-head{margin-bottom:18px;}
+.campaign-col .bigBox-head h2{display:flex;align-items:center;gap:8px;}
+.campaign-form{display:flex;flex-direction:column;gap:14px;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:16px;}
+.campaign-form .row2{display:flex;gap:12px;}
+.campaign-form .row2 .field{flex:1;margin-bottom:0;}
+.campaign-list{display:flex;flex-direction:column;gap:12px;max-height:420px;overflow-y:auto;}
+.campaign-item{border:1px solid var(--border);border-radius:14px;padding:14px 16px;}
+.campaign-item-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.campaign-item h4{font-size:14.5px;font-weight:700;}
+.campaign-item p{font-size:12.5px;color:var(--text-muted);margin-top:6px;line-height:1.5;}
+.campaign-item .campaign-dates{font-size:11.5px;color:var(--text-muted);margin-top:10px;display:flex;align-items:center;gap:6px;}
+.campaign-item .campaign-foot{display:flex;justify-content:space-between;align-items:center;margin-top:10px;}
+
+/* ---------- HELPERS ---------- */
+.empty-state{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 20px;color:var(--text-muted);text-align:center;gap:10px;
+}
+.empty-state svg{width:34px;height:34px;stroke:var(--border);}
+.empty-state b{color:var(--text);font-size:13.5px;}
+.empty-state span{font-size:12.5px;max-width:280px;}
+.spinner{
+  width:16px;height:16px;border-radius:50%;
+  border:2px solid rgba(255,255,255,.4);border-top-color:#fff;
+  animation:spin .7s linear infinite;flex-shrink:0;
+}
+.spinner.dark{border:2px solid rgba(18,20,28,.15);border-top-color:var(--accent);}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* ---------- LOGIN SCREEN ---------- */
+.login-screen{
+  height:100vh;width:100%;
+  display:flex;align-items:center;justify-content:center;
+  background:
+    radial-gradient(circle at 15% 20%, rgba(255,87,34,.16), transparent 45%),
+    radial-gradient(circle at 85% 80%, rgba(255,87,34,.10), transparent 45%),
+    var(--ink);
+  padding:20px;
+}
+.login-card{
+  width:100%;max-width:392px;
+  background:var(--surface);
+  border-radius:20px;
+  padding:34px 30px 28px;
+  box-shadow:0 24px 60px rgba(0,0,0,.35);
+}
+.login-logo{display:flex;align-items:center;gap:10px;margin-bottom:22px;}
+.login-title{font-size:20px;font-weight:700;margin-bottom:4px;}
+.login-sub{font-size:13px;color:var(--text-muted);margin-bottom:24px;}
+.login-field{margin-bottom:14px;}
+.login-field label{font-size:12.5px;font-weight:600;color:var(--text-muted);display:block;margin-bottom:6px;}
+.login-field input{
+  width:100%;padding:12px 13px;border-radius:10px;border:1px solid var(--border);
+  font-size:14px;outline:none;background:var(--bg);
+}
+.login-field input:focus{border-color:var(--accent);background:var(--surface);}
+.login-error{
+  background:var(--danger-soft);color:var(--danger);font-size:12.5px;font-weight:600;
+  padding:10px 12px;border-radius:9px;margin-bottom:14px;display:none;
+}
+.login-error.show{display:block;}
+.login-submit{
+  width:100%;padding:13px;background:var(--accent);color:#fff;border:none;border-radius:10px;
+  font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;
+  transition:background .15s ease;margin-top:6px;
+}
+.login-submit:hover{background:var(--accent-dark);}
+.login-submit:disabled{opacity:.65;cursor:not-allowed;}
+.login-toggle{text-align:center;margin-top:16px;font-size:12.5px;color:var(--text-muted);}
+.login-toggle button{background:none;border:none;color:var(--accent-dark);font-weight:700;cursor:pointer;font-size:12.5px;text-decoration:underline;}
+
+/* ---------- MODALS ---------- */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(18,20,28,.5);
+  display:flex;align-items:center;justify-content:center;z-index:200;padding:20px;
+}
+.modal{
+  width:100%;max-width:420px;background:var(--surface);border-radius:18px;
+  padding:26px;box-shadow:0 24px 60px rgba(0,0,0,.3);
+  max-height:90vh;overflow-y:auto;
+}
+.modal-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.modal-head h3{font-size:16.5px;font-weight:700;}
+.modal-close{
+  width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.modal-close svg{width:14px;height:14px;stroke:var(--text-muted);}
+.modal-body .field{margin-bottom:14px;}
+.modal-body .hint{font-size:11.5px;color:var(--text-muted);margin-top:-8px;margin-bottom:14px;}
+.modal-footer{display:flex;justify-content:flex-end;gap:10px;margin-top:8px;}
+
+/* ---------- TOASTS ---------- */
+.toast-container{position:fixed;bottom:22px;right:22px;display:flex;flex-direction:column;gap:10px;z-index:400;max-width:320px;}
+.toast{
+  background:var(--ink);color:#fff;padding:13px 16px;border-radius:12px;
+  font-size:13px;font-weight:600;box-shadow:0 12px 28px rgba(0,0,0,.25);
+  display:flex;align-items:center;gap:10px;
+  animation:toastIn .25s ease;
+}
+.toast.success{background:#123420;}
+.toast.error{background:#3A1220;}
+@keyframes toastIn{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+/* ---------- MAP INTERACTION ---------- */
+.map-wrap{position:relative;}
+#courierMap{width:100%;height:540px;border-radius:14px;overflow:hidden;background:var(--bg);z-index:1;}
+.map-legend{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:14px;}
+.map-legend .item{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-muted);font-weight:600;}
+.map-legend .dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.map-legend .dot.online{background:var(--success);box-shadow:0 0 0 3px var(--success-soft);}
+.map-legend .dot.offline{background:var(--text-muted);box-shadow:0 0 0 3px var(--border);}
+.sim-toggle{
+  margin-left:auto;padding:9px 15px;border-radius:9px;border:1px solid var(--border);
+  background:var(--surface);color:var(--text);font-size:12.5px;font-weight:700;cursor:pointer;
+  display:inline-flex;align-items:center;gap:8px;transition:background .15s ease,border-color .15s ease;
+}
+.sim-toggle .pulse{width:8px;height:8px;border-radius:50%;background:var(--text-muted);flex-shrink:0;}
+.sim-toggle.active{border-color:var(--accent);color:var(--accent-dark);background:var(--accent-soft);}
+.sim-toggle.active .pulse{background:var(--accent);animation:pulse 1s ease infinite;}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,87,34,.5);}100%{box-shadow:0 0 0 8px rgba(255,87,34,0);}}
+.courier-popup{font-family:'Inter',sans-serif;min-width:180px;}
+.courier-popup h4{font-family:'Sora',sans-serif;font-size:14px;margin-bottom:4px;}
+.courier-popup .meta{font-size:12px;color:var(--text-muted);margin-bottom:8px;}
+.leaflet-popup-content-wrapper{border-radius:12px;}
+
+@media(max-width:900px){
+  .hamburger { display: block; }
+  .sidebar {
+    position: fixed;
+    left: -260px;
+    top: 0; bottom: 0;
+    width: 252px;
+  }
+  .sidebar.open { left: 0; }
+  .sidebar-overlay.show { display: block; }
+  
+  .logo-text, .nav-label, .menu button span, .sidebar-footer, .menu button .nav-badge { display: block; }
+  .menu button { justify-content: flex-start; }
+  .profile-text { display: none; }
+}
+
+/* ---------- admin6 ƏLAVƏ STİLLƏR ---------- */
+.verified-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--success-soft);color:var(--success);}
+.unverified-badge{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:700;padding:3px 8px;border-radius:20px;background:var(--warning-soft);color:var(--warning);}
+.entity-sub{font-size:12px;color:var(--text-muted);margin-top:2px;}
+.mini-map-pick{height:220px;border-radius:12px;overflow:hidden;margin-bottom:14px;border:1px solid var(--border);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 16px;margin-bottom:14px;}
+.detail-grid .dlabel{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.03em;}
+.detail-grid .dval{font-size:13.5px;font-weight:600;color:var(--text);margin-top:2px;}
+.items-table{width:100%;font-size:13px;border-top:1px solid var(--border);margin-top:10px;padding-top:10px;}
+.items-table div{display:flex;justify-content:space-between;padding:4px 0;}
+.progress-track{height:6px;background:var(--border);border-radius:6px;overflow:hidden;margin-top:8px;}
+.progress-fill{height:100%;background:var(--accent);border-radius:6px;transition:width .3s;}
+.tiny-btn{font-size:11.5px;padding:5px 9px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer;font-weight:600;color:var(--text);}
+.tiny-btn:hover{background:var(--bg);}
+.search-address-row{display:flex;gap:8px;margin-bottom:10px;}
+.search-address-row input{flex:1;}
+.field-hint{font-size:11.5px;color:var(--text-muted);margin-top:-8px;margin-bottom:12px;}
+.section-divider{border-top:1px solid var(--border);margin:16px 0;padding-top:16px;}
+.stat-pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;background:var(--accent-soft);color:var(--accent-dark);margin-left:6px;}
+</style>
+</head>
+<body>
+
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-6h14l2 6M5 12h14v6a1 1 0 01-1 1H6a1 1 0 01-1-1v-6z"/><circle cx="8" cy="19" r="1.4"/><circle cx="16" cy="19" r="1.4"/></svg>
+      </div>
+      <div class="logo-text">Baku<span>Go</span></div>
+    </div>
+    <div class="login-title" id="loginTitle">Operator girişi</div>
+    <div class="login-sub" id="loginSub">Davam etmək üçün admin hesabınla daxil ol</div>
+    <div class="login-error" id="loginError"></div>
+    <form id="loginForm">
+      <div class="login-field">
+        <label>E-poçt</label>
+        <input type="email" id="loginEmail" placeholder="admin@bakugo.az" autocomplete="username" required>
+      </div>
+      <div class="login-field">
+        <label>Şifrə</label>
+        <input type="password" id="loginPassword" placeholder="••••••••" autocomplete="current-password" required minlength="6">
+      </div>
+      <button type="submit" class="login-submit" id="loginSubmitBtn">
+        <span id="loginBtnText">Daxil ol</span>
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="app-shell hidden" id="appShell">
+  <div class="sidebar-overlay" id="sidebarOverlay"></div>
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-6h14l2 6M5 12h14v6a1 1 0 01-1 1H6a1 1 0 01-1-1v-6z"/><circle cx="8" cy="19" r="1.4"/><circle cx="16" cy="19" r="1.4"/></svg>
+      </div>
+      <div class="logo-text">Baku<span>Go</span></div>
+    </div>
+    <div class="nav-label">Əsas</div>
+    <div class="menu">
+      <button class="active" id="nav-dashboard">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10.5L12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></svg>
+        <span>İdarə paneli</span>
+      </button>
+      <button id="nav-orders">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/><path d="M12 11v10"/></svg>
+        <span>Sifarişlər</span>
+        <span class="nav-badge hidden" id="ordersActiveBadge">0</span>
+      </button>
+      <button id="nav-courier">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 18h6M12 18l2-8h3l2 4M6 15l3-7h4"/></svg>
+        <span>Kuryerlər</span>
+      </button>
+      <button id="nav-restaurant">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v8a2 2 0 002 2v8M4 3h0M8 3v6M6 3v6M12 3c2 1 3 3 3 6 0 2-1 3-2 3v9"/></svg>
+        <span>Restoranlar</span>
+      </button>
+      <button id="nav-map">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 20l-5.5 2V6L9 4m0 16l6-2m-6 2V4m6 14l5.5 2V4L15 6m0 14V6m0 0L9 4"/></svg>
+        <span>Xəritə</span>
+      </button>
+      <button id="nav-campaigns">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11v2a2 2 0 002 2h1l3 5 1-5h6l5 3V6l-5 3H9L6 7H5a2 2 0 00-2 2v2z"/></svg>
+        <span>Kampaniyalar</span>
+      </button>
+      <button id="nav-promocodes">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.6 12.6L12.6 20.6a2 2 0 01-2.8 0l-7.4-7.4V4h9.2l7.4 7.4a2 2 0 010 2.8z"/><circle cx="7.5" cy="7.5" r="1.2"/></svg>
+        <span>Promo kodlar</span>
+        <span class="nav-badge hidden" id="promoActiveBadge">0</span>
+      </button>
+      <button id="nav-reviews">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17.3l-6.2 3.6 1.6-6.9-5.4-4.6 7.1-.6L12 2l2.9 6.8 7.1.6-5.4 4.6 1.6 6.9z"/></svg>
+        <span>Rəylər</span>
+        <span class="nav-badge hidden" id="reviewsCountBadge">0</span>
+      </button>
+    </div>
+    <div class="nav-label">İdarəetmə</div>
+    <div class="menu">
+      <button id="nav-users">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg>
+        <span>İstifadəçilər</span>
+      </button>
+      <button id="nav-payments">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M3 10h18M7 15h4"/></svg>
+        <span>Ödənişlər</span>
+      </button>
+      <button id="nav-withdrawals">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>
+        <span>Pul çıxarmalar</span>
+        <span class="nav-badge hidden" id="withdrawalsActiveBadge">0</span>
+      </button>
+      <button id="nav-settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 13a1.7 1.7 0 00.3 1.9l.1.1a2 2 0 11-2.9 2.9l-.1-.1a1.7 1.7 0 00-1.9-.3 1.7 1.7 0 00-1 1.5V19a2 2 0 01-4 0v-.1a1.7 1.7 0 00-1-1.6 1.7 1.7 0 00-1.9.3l-.1.1a2 2 0 11-2.9-2.9l.1-.1a1.7 1.7 0 00.3-1.9 1.7 1.7 0 00-1.5-1H4a2 2 0 010-4h.1a1.7 1.7 0 001.5-1 1.7 1.7 0 00-.3-1.9l-.1-.1a2 2 0 112.9-2.9l.1.1a1.7 1.7 0 001.9.3H10a1.7 1.7 0 001-1.5V4a2 2 0 014 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.9-.3l.1-.1a2 2 0 112.9 2.9l-.1.1a1.7 1.7 0 00-.3 1.9V10a1.7 1.7 0 001.5 1h.1a2 2 0 010 4h-.1a1.7 1.7 0 00-1.5 1z"/></svg>
+        <span>Parametrlər</span>
+      </button>
+    </div>
+    <div class="sidebar-footer">
+      <div class="sf-status" id="serverStatusRow"><div class="dot"></div><b style="margin:0;">Server statusu</b></div>
+      <p id="serverStatusText">Firestore verilənlər bazasına qoşulur...</p>
+      <button class="logout-link" id="logoutBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+        Hesabdan çıx
+      </button>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="hamburger" id="hamburgerBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+      </button>
+      <div class="search-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input class="search" id="globalSearch" placeholder="Sifariş, restoran, kuryer axtar...">
+      </div>
+      <div class="topbar-right">
+        <div class="icon-btn" title="Bildirişlər" id="notifBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8a6 6 0 00-12 0c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+          <div class="dot hidden" id="notifDot"></div>
+        </div>
+        <div class="profile">
+          <div class="profile-text"><b id="profileName">Admin</b><span id="profileEmail">BakuGo Operator</span></div>
+          <div class="avatar" id="profileAvatar">A</div>
+        </div>
+      </div>
+    </div>
+
+    <div id="dashboard" class="page">
+      <div class="section-head">
+        <div>
+          <h1>Xoş gəlmisən<span id="welcomeName"></span></h1>
+          <p id="todayLabel">Bugün — platformanın canlı görünüşü</p>
+        </div>
+        <button class="btn-primary" id="refreshBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.6-6.4M21 4v5h-5"/></svg>
+          Yenilə
+        </button>
+      </div>
+      <div class="cards">
+        <div class="card">
+          <div class="card-top"><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/></svg></div></div>
+          <h3>Bugünkü sifariş</h3>
+          <div class="value" id="ordersCount">0</div>
+          <div class="trend up" id="ordersCountTrend">Canlı sinxronizasiya</div>
+        </div>
+        <div class="card">
+          <div class="card-top"><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c0-3.9 3.1-7 7-7s7 3.1 7 7"/></svg></div></div>
+          <h3>Qeydiyyatlı istifadəçi</h3>
+          <div class="value" id="usersCountCard">0</div>
+          <div class="trend flat">Firestore bazası</div>
+        </div>
+        <div class="card">
+          <div class="card-top"><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="18" r="3"/><circle cx="18" cy="18" r="3"/><path d="M9 18h6M12 18l2-8h3l2 4"/></svg></div></div>
+          <h3>Onlayn kuryer</h3>
+          <div class="value" id="onlineCouriersCard">0</div>
+          <div class="trend up">Canlı status</div>
+        </div>
+        <div class="card">
+          <div class="card-top"><div class="card-icon"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 3v8a2 2 0 002 2v8M8 3v6M6 3v6M12 3c2 1 3 3 3 6 0 2-1 3-2 3v9"/></svg></div></div>
+          <h3>Aktiv restoran</h3>
+          <div class="value" id="activeRestaurantsCard">0</div>
+          <div class="trend flat">İnteqrasiya edilib</div>
+        </div>
+      </div>
+      <div class="bigBox admin-only">
+        <div class="bigBox-head">
+          <h2>Son 7 Gün — Sifariş və Gəlir</h2>
+          <span class="route-label">Canlı Firestore datası</span>
+        </div>
+        <div class="chart-wrap">
+            <canvas id="weeklyChartCanvas"></canvas>
+        </div>
+      </div>
+      <div class="bigBox">
+        <div class="bigBox-head">
+          <h2>Son 5 Sifariş</h2>
+          <button class="btn-secondary" id="seeAllOrdersBtn">Hamısına bax</button>
+        </div>
+        <table>
+          <thead>
+            <tr><th>#</th><th>Müştəri</th><th>Restoran</th><th>Kuryer</th><th>Marşrut</th><th>Məbləğ</th><th>Status</th></tr>
+          </thead>
+          <tbody id="dashboardOrdersBody"></tbody>
+        </table>
+        <div id="dashboardOrdersEmpty" class="empty-state hidden">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.6"><path d="M3 7l9-4 9 4-9 4-9-4z"/><path d="M3 7v10l9 4 9-4V7"/></svg>
+          <b>Hələ sifariş yoxdur</b>
+        </div>
+      </div>
+    </div>
+
+    <div id="orders" class="page hidden">
+      <div class="section-head">
+        <div><h1>Sifarişlər</h1><p id="ordersSubtitle">Bütün 4 tətbiqlə real-vaxt sinxron</p></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-secondary" id="openNewOrderModalBtn">+ Sifariş yarat (dəstək)</button>
+          <button class="btn-primary" id="exportCsvBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+            Excel/CSV ixrac et
+          </button>
+        </div>
+      </div>
+      <div class="bigBox">
+        <div class="bigBox-head">
+          <h2>Bütün sifarişlər</h2>
+          <div class="tabs" id="ordersTabs">
+            <button class="active" data-filter="all">Hamısı</button>
+            <button data-filter="active">Aktiv</button>
+            <button data-filter="delivered">Çatdırılıb</button>
+            <button data-filter="cancelled">Ləğv edilib</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Müştəri</th><th>Restoran</th><th>Kuryer</th><th>Status</th><th>Məbləğ</th><th>Əməliyyat</th></tr></thead>
+          <tbody id="ordersFullBody"></tbody>
+        </table>
+        <div id="ordersFullEmpty" class="empty-state hidden"><b>Uyğun sifariş tapılmadı</b></div>
+      </div>
+    </div>
+
+    <div id="courier" class="page hidden">
+      <div class="section-head">
+        <div><h1>Kuryerlər</h1><p id="couriersSubtitle">Kuryer heyətinin idarə edilməsi — real Firebase Auth hesabları</p></div>
+        <button class="btn-primary admin-only" id="openNewCourierModalBtn">+ Yeni kuryer</button>
+      </div>
+      <div class="bigBox">
+        <div class="grid-cards" id="couriersGrid"></div>
+        <div id="couriersEmpty" class="empty-state hidden"><b>Kuryer əlavə olunmayıb</b></div>
+      </div>
+    </div>
+
+    <div id="restaurant" class="page hidden">
+      <div class="section-head">
+        <div><h1>Restoranlar</h1><p id="restaurantsSubtitle">Restoran şəbəkəsi — real Firebase Auth hesabları</p></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-secondary" id="openNotifyRestaurantModalBtn">🔔 Restorana bildiriş göndər</button>
+          <button class="btn-primary admin-only" id="openNewRestaurantModalBtn">+ Yeni restoran</button>
+        </div>
+      </div>
+      <div class="bigBox">
+        <div class="grid-cards" id="restaurantsGrid"></div>
+        <div id="restaurantsEmpty" class="empty-state hidden"><b>Restoran əlavə olunmayıb</b></div>
+      </div>
+    </div>
+
+    <div id="map" class="page hidden">
+      <div class="section-head">
+        <div><h1>Canlı Monitorinq</h1><p id="mapSubtitle">Kuryerlərin və restoranların canlı yerləşməsi (real GPS)</p></div>
+      </div>
+      <div class="bigBox map-wrap">
+        <div class="map-legend">
+          <div class="item"><div class="dot online"></div>Onlayn kuryer</div>
+          <div class="item"><div class="dot offline"></div>Oflayn kuryer</div>
+          <div class="item"><div class="dot" style="background:#FF5722;"></div>Restoran</div>
+        </div>
+        <div id="courierMap"></div>
+        <div id="mapEmpty" class="empty-state hidden"><b>Xəritədə göstəriləcək kuryer yoxdur</b></div>
+      </div>
+    </div>
+
+    <div id="campaigns" class="page hidden">
+      <div class="section-head">
+        <div><h1>Kampaniyalar</h1><p>Kampaniya yaradın — göndər düyməsinə basdıqda müvafiq tətbiqin bütün istifadəçilərinə bildiriş şəklində avtomatik çatdırılır</p></div>
+      </div>
+      <div class="cards" style="margin-bottom:18px;">
+        <div class="card"><h3>Push tokeni olan istifadəçi</h3><div class="value" id="fcmCustomerCount">0</div></div>
+        <div class="card"><h3>Push tokeni olan kuryer</h3><div class="value" id="fcmCourierCount">0</div></div>
+        <div class="card"><h3>Push tokeni olan restoran</h3><div class="value" id="fcmRestaurantCount">0</div></div>
+      </div>
+      <div class="campaign-grid">
+        <div class="bigBox campaign-col">
+          <div class="bigBox-head"><h2>👤 İstifadəçi kampaniyası</h2></div>
+          <form id="campaignFormCustomer" class="campaign-form">
+            <div class="field"><label>Kampaniya adı</label><input type="text" id="campCustomerName" placeholder="Məs. Yay endirimi" required></div>
+            <div class="field"><label>Məlumat</label><textarea id="campCustomerDesc" rows="3" placeholder="Kampaniya haqqında qısa məlumat" required></textarea></div>
+            <div class="row2">
+              <div class="field"><label>Başlama tarixi</label><input type="date" id="campCustomerStart" required></div>
+              <div class="field"><label>Bitmə tarixi</label><input type="date" id="campCustomerEnd" required></div>
+            </div>
+            <div class="settings-row" style="padding:4px 0 10px;">
+              <div><h4 style="font-size:13px;">Real mobil push də göndər (FCM)</h4><p>Qeydə alınmış cihazlara push bildirişi</p></div>
+              <div class="switch on" id="campCustomerPushSwitch"></div>
+            </div>
+            <button type="submit" class="btn-primary" id="campCustomerSubmitBtn" style="width:100%;">Göndər — bütün istifadəçilərə</button>
+          </form>
+          <div class="campaign-list" id="campaignListCustomer"></div>
+          <div id="campaignEmptyCustomer" class="empty-state hidden"><b>Hələ istifadəçi kampaniyası yoxdur</b></div>
+        </div>
+
+        <div class="bigBox campaign-col">
+          <div class="bigBox-head"><h2>🛵 Kuryer kampaniyası</h2></div>
+          <form id="campaignFormCourier" class="campaign-form">
+            <div class="field"><label>Kampaniya adı</label><input type="text" id="campCourierName" placeholder="Məs. Sürətli çatdırma bonusu" required></div>
+            <div class="field"><label>Məlumat</label><textarea id="campCourierDesc" rows="3" placeholder="Kampaniya haqqında qısa məlumat" required></textarea></div>
+            <div class="row2">
+              <div class="field"><label>Başlama tarixi</label><input type="date" id="campCourierStart" required></div>
+              <div class="field"><label>Bitmə tarixi</label><input type="date" id="campCourierEnd" required></div>
+            </div>
+            <div class="settings-row" style="padding:4px 0 10px;">
+              <div><h4 style="font-size:13px;">Real mobil push də göndər (FCM)</h4><p>Qeydə alınmış cihazlara push bildirişi</p></div>
+              <div class="switch on" id="campCourierPushSwitch"></div>
+            </div>
+            <button type="submit" class="btn-primary" id="campCourierSubmitBtn" style="width:100%;">Göndər — bütün kuryerlərə</button>
+          </form>
+          <div class="campaign-list" id="campaignListCourier"></div>
+          <div id="campaignEmptyCourier" class="empty-state hidden"><b>Hələ kuryer kampaniyası yoxdur</b></div>
+        </div>
+
+        <div class="bigBox campaign-col">
+          <div class="bigBox-head"><h2>🍽️ Restoran kampaniyası</h2></div>
+          <form id="campaignFormRestaurant" class="campaign-form">
+            <div class="field"><label>Kampaniya adı</label><input type="text" id="campRestaurantName" placeholder="Məs. Yeni ay komissiya endirimi" required></div>
+            <div class="field"><label>Məlumat</label><textarea id="campRestaurantDesc" rows="3" placeholder="Kampaniya haqqında qısa məlumat" required></textarea></div>
+            <div class="row2">
+              <div class="field"><label>Başlama tarixi</label><input type="date" id="campRestaurantStart" required></div>
+              <div class="field"><label>Bitmə tarixi</label><input type="date" id="campRestaurantEnd" required></div>
+            </div>
+            <div class="settings-row" style="padding:4px 0 10px;">
+              <div><h4 style="font-size:13px;">Real mobil push də göndər (FCM)</h4><p>Qeydə alınmış cihazlara push bildirişi</p></div>
+              <div class="switch on" id="campRestaurantPushSwitch"></div>
+            </div>
+            <button type="submit" class="btn-primary" id="campRestaurantSubmitBtn" style="width:100%;">Göndər — bütün restoranlara</button>
+          </form>
+          <div class="campaign-list" id="campaignListRestaurant"></div>
+          <div id="campaignEmptyRestaurant" class="empty-state hidden"><b>Hələ restoran kampaniyası yoxdur</b></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="promocodes" class="page hidden">
+      <div class="section-head">
+        <div><h1>Promo kodlar</h1><p>Endirim kuponları yaradın və idarə edin — müştərilər sifariş zamanı bu kodu daxil edərək endirim əldə edə bilər</p></div>
+        <button class="btn-primary" id="openNewPromoModalBtn">+ Yeni promo kod</button>
+      </div>
+      <div class="cards">
+        <div class="card"><h3>Aktiv kodlar</h3><div class="value" id="promoActiveCount">0</div></div>
+        <div class="card"><h3>Ümumi istifadə sayı</h3><div class="value" id="promoUsedCount">0</div></div>
+        <div class="card"><h3>Vaxtı bitmiş kodlar</h3><div class="value" id="promoExpiredCount">0</div></div>
+      </div>
+      <div class="bigBox" style="margin-top:18px;">
+        <div class="bigBox-head"><h2>Bütün promo kodlar</h2></div>
+        <table>
+          <thead><tr><th>Kod</th><th>Endirim</th><th>Min. sifariş</th><th>İstifadə</th><th>Etibarlılıq tarixi</th><th>Status</th><th>Əməliyyat</th></tr></thead>
+          <tbody id="promoBody"></tbody>
+        </table>
+        <div id="promoEmpty" class="empty-state hidden"><b>Hələ promo kod yaradılmayıb</b></div>
+      </div>
+    </div>
+
+    <div id="reviews" class="page hidden">
+      <div class="section-head">
+        <div><h1>Rəylər</h1><p>Müştərilərin məhsullara buraxdığı ulduz reytinqi və şərhlər — uyğunsuz olanları silə bilərsiniz</p></div>
+      </div>
+      <div class="cards">
+        <div class="card"><h3>Ümumi rəy sayı</h3><div class="value" id="reviewsTotalCount">0</div></div>
+        <div class="card"><h3>Orta reytinq</h3><div class="value" id="reviewsAvgRating">0.0 ★</div></div>
+        <div class="card"><h3>Aşağı reytinq (≤2★)</h3><div class="value" id="reviewsLowCount">0</div></div>
+      </div>
+      <div class="bigBox" style="margin-top:18px;">
+        <div class="bigBox-head"><h2>Bütün rəylər</h2></div>
+        <div class="campaign-list" id="reviewsList" style="max-height:none;"></div>
+        <div id="reviewsEmpty" class="empty-state hidden"><b>Hələ rəy yoxdur</b></div>
+      </div>
+    </div>
+
+    <div id="users" class="page hidden">
+      <div class="section-head">
+        <div><h1>İstifadəçilər</h1><p id="usersSubtitle">Qeydiyyatlı müştəri bazası (customer app)</p></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-secondary" id="exportUsersCsvBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+            Excel/CSV ixrac et
+          </button>
+          <button class="btn-primary admin-only" id="openNewUserModalBtn">+ Yeni istifadəçi</button>
+        </div>
+      </div>
+      <div class="bigBox">
+        <table>
+          <thead><tr><th>İstifadəçi</th><th>Telefon</th><th>E-poçt</th><th>Ünvan</th><th>Sifariş sayı</th><th>Əməliyyat</th></tr></thead>
+          <tbody id="usersBody"></tbody>
+        </table>
+        <div id="usersEmpty" class="empty-state hidden"><b>İstifadəçi tapılmadı</b></div>
+      </div>
+    </div>
+
+    <div id="payments" class="page hidden">
+      <div class="section-head">
+        <div><h1>Ödənişlər</h1><p id="paymentsSubtitle">Maliyyə xülasəsi — çatdırılmış sifarişlərə əsasən</p></div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="btn-secondary" id="exportTxnCsvBtn">
+            <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+            Excel/CSV ixrac et
+          </button>
+          <button class="btn-secondary" id="openNewTxnModalBtn">+ Yeni əməliyyat qeydi</button>
+        </div>
+      </div>
+      <div class="cards">
+        <div class="card"><h3>Ümumi gəlir (çatdırılıb)</h3><div class="value" id="revenueValue">0 AZN</div></div>
+        <div class="card"><h3>Platforma komissiyası</h3><div class="value" id="commissionValue">0 AZN</div><div class="trend flat" id="commissionRateLabel">restoran üzrə fərdi tarif</div></div>
+        <div class="card"><h3>Kuryer ödənişləri</h3><div class="value" id="courierPayValue">0 AZN</div></div>
+      </div>
+      <div class="bigBox">
+        <div class="bigBox-head"><h2>Son əməliyyatlar (admin qeydləri)</h2></div>
+        <table>
+          <thead><tr><th>Əməliyyat</th><th>Tərəf</th><th>Tarix</th><th>Məbləğ</th><th>Üsul</th><th>Status</th></tr></thead>
+          <tbody id="transactionsBody"></tbody>
+        </table>
+        <div id="transactionsEmpty" class="empty-state hidden"><b>Əməliyyat yoxdur</b></div>
+      </div>
+    </div>
+
+    <div id="settings" class="page hidden">
+      <div class="section-head"><div><h1>Parametrlər</h1><p>Platforma standart dəyərləri</p></div></div>
+      <div class="bigBox">
+        <h2>Standart Tariflər</h2>
+        <p class="field-hint" style="margin-top:6px;">Bu dəyərlər yalnız yeni restoran qeydiyyatı zamanı təklif kimi göstərilir — hər restoranın öz komissiyasını "Restoranlar" səhifəsindən fərdi dəyişə bilərsiniz.</p>
+        <div class="field-group">
+          <div class="field"><label>Standart restoran komissiyası (%)</label><input type="number" id="settingCommission" value="18" min="0"></div>
+          <div class="field"><label>Kuryer başına baza haqqı (AZN) — məlumat üçün</label><input type="number" step="0.1" id="settingCourierFee" value="2.5" min="0"></div>
+          <div class="field"><label>Minimum sifariş məbləği (AZN) — məlumat üçün</label><input type="number" id="settingMinOrder" value="10" min="0"></div>
+        </div>
+        <button class="btn-primary" style="margin-top:18px" id="saveSettingsBtn">Yadda saxla</button>
+      </div>
+      <div class="bigBox">
+        <div class="bigBox-head">
+          <h2>Çatdırılma Zonaları (məsafəyə görə)</h2>
+          <button type="button" class="btn-secondary" id="addDeliveryZoneBtn">+ Zona əlavə et</button>
+        </div>
+        <p class="field-hint" style="margin-bottom:12px;">Restoran ilə çatdırılma ünvanı arasındakı məsafəyə (km) görə zonalar təyin edin. Sifariş yaradarkən "Məsafəyə görə hesabla" düyməsi bu zonalara əsasən haqqı avtomatik təklif edir — haqq yenə də əl ilə dəyişdirilə bilər.</p>
+        <table>
+          <thead><tr><th>Zona adı</th><th>Maksimum məsafə (km)</th><th>Haqq (AZN)</th><th>Əməliyyat</th></tr></thead>
+          <tbody id="deliveryZonesBody"></tbody>
+        </table>
+        <div id="deliveryZonesEmpty" class="empty-state hidden"><b>Zona təyin edilməyib</b></div>
+        <button class="btn-primary" style="margin-top:18px" id="saveDeliveryZonesBtn">Zonaları yadda saxla</button>
+      </div>
+      <div class="bigBox">
+        <h2>Sistem Bildirişləri</h2>
+        <div class="settings-row">
+          <div><h4>Pul çıxarma sorğusu bildirişi</h4><p>Yeni pul çıxarma sorğusu gələndə admin panelində toast bildirişi göstər</p></div>
+          <div class="switch on" id="notifNewOrder"></div>
+        </div>
+      </div>
+      <div class="bigBox">
+        <h2>Admin hesabı</h2>
+        <div class="settings-row">
+          <div><h4 id="settingsAdminEmail">—</h4><p>Rol: <span id="settingsAdminRole">admin</span></p></div>
+        </div>
+      </div>
+      <div class="bigBox hidden" id="adminManagementBox">
+        <div class="bigBox-head">
+          <h2>Admin İdarəetməsi</h2>
+          <button type="button" class="btn-primary" id="openNewAdminModalBtn">+ Yeni admin/operator</button>
+        </div>
+        <p class="field-hint" style="margin-bottom:12px;">Administrator bütün bölmələrə tam giriş əldə edir. Operator yalnız İdarə paneli, Sifarişlər, Kuryerlər, Restoranlar, Xəritə, İstifadəçilər və Rəylər bölmələrini görür — Ödənişlər, Parametrlər, Kampaniyalar, Promo kodlar və Pul çıxarma sorğuları operatordan gizlədilir.</p>
+        <table>
+          <thead><tr><th>E-poçt</th><th>Rol</th><th>Status</th><th>Əməliyyat</th></tr></thead>
+          <tbody id="adminsBody"></tbody>
+        </table>
+        <div id="adminsEmpty" class="empty-state hidden"><b>Heç bir admin hesabı tapılmadı</b></div>
+      </div>
+    </div>
+
+    <div id="withdrawals" class="page hidden">
+      <div class="section-head"><div><h1>Pul çıxarma sorğuları</h1><p>Kuryer və restoranlardan gələn pul çıxarma sorğuları — yalnız təsdiqlədikdə vəsait onların hesabına köçmüş sayılır</p></div></div>
+      <div class="cards">
+        <div class="card"><h3>Gözləyən sorğular</h3><div class="value" id="withdrawalsPendingCount">0</div></div>
+        <div class="card"><h3>Gözləyən məbləğ</h3><div class="value" id="withdrawalsPendingAmount">0 AZN</div></div>
+        <div class="card"><h3>Bu ay ödənilib</h3><div class="value" id="withdrawalsApprovedAmount">0 AZN</div></div>
+      </div>
+      <div class="bigBox">
+        <div class="bigBox-head"><h2>Sorğular</h2></div>
+        <table>
+          <thead><tr><th>Tərəf</th><th>Növ</th><th>Məbləğ</th><th>Kart/IBAN</th><th>Tarix</th><th>Status</th><th>Əməliyyat</th></tr></thead>
+          <tbody id="withdrawalsBody"></tbody>
+        </table>
+        <div id="withdrawalsEmpty" class="empty-state hidden"><b>Pul çıxarma sorğusu yoxdur</b></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="courierModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="courierModalTitle">Yeni kuryer</h3><button class="modal-close" onclick="document.getElementById('courierModal').classList.add('hidden')">&times;</button></div>
+    <form id="courierForm">
+      <div class="modal-body">
+        <div id="courierAuthFields">
+          <div class="field"><label>E-poçt (giriş üçün)</label><input type="email" id="courierEmail" placeholder="kuryer@bakugo.az" required></div>
+          <div class="field"><label>Şifrə</label><input type="password" id="courierPassword" minlength="6" placeholder="Ən azı 6 simvol" required></div>
+          <div class="field-hint">Bu məlumatlarla kuryer Kuryer tətbiqinə birbaşa daxil ola biləcək. Hesab admin panelindən keçən istifadəçini çıxış etdirmədən yaradılır.</div>
+        </div>
+        <div class="field"><label>Ad</label><input type="text" id="courierName" required></div>
+        <div class="field"><label>Soyad</label><input type="text" id="courierSurname" required></div>
+        <div class="field"><label>Telefon</label><input type="text" id="courierPhone" placeholder="+994 (50) 000-00-00" required></div>
+        <div class="field"><label>İş zonası</label><input type="text" id="courierZone" placeholder="Məs. Nərimanov, Yasamal" value="Merkez"></div>
+        <div class="field admin-only"><label>Komissiya dərəcəsi (%) — kuryerin qazancından tutulan</label><input type="number" step="0.1" id="courierCommission" min="0" value="0"></div>
+        <div class="field"><label>Reytinq (0–5)</label><input type="number" step="0.1" min="0" max="5" id="courierRating" placeholder="Məs. 4.8"></div>
+        <div class="settings-row" style="padding:6px 0;">
+          <div><h4>Təsdiqlənmiş kuryer</h4><p>Aktivləşdirilsə kuryer dərhal sifariş qəbul edə bilər</p></div>
+          <div class="switch on" id="courierVerifiedSwitch"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('courierModal').classList.add('hidden')">Ləğv et</button>
+        <button type="submit" class="btn-primary" id="courierFormSubmitBtn">Əlavə et</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="restaurantModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="restaurantModalTitle">Yeni restoran</h3><button class="modal-close" onclick="document.getElementById('restaurantModal').classList.add('hidden')">&times;</button></div>
+    <form id="restaurantForm">
+      <div class="modal-body">
+        <div id="restaurantAuthFields">
+          <div class="field"><label>E-poçt (giriş üçün)</label><input type="email" id="restaurantEmail" placeholder="restoran@bakugo.az" required></div>
+          <div class="field"><label>Şifrə</label><input type="password" id="restaurantPassword" minlength="6" placeholder="Ən azı 6 simvol" required></div>
+          <div class="field-hint">Bu məlumatlarla restoran Restoran Panelinə birbaşa daxil ola biləcək.</div>
+        </div>
+        <div class="field"><label>Restoran adı</label><input type="text" id="restaurantName" required></div>
+        <div class="field"><label>Telefon</label><input type="text" id="restaurantPhone" placeholder="+994 (12) 000-00-00" required></div>
+        <div class="field"><label>Şəbəkə adı (istəyə görə)</label><input type="text" id="restaurantChain" placeholder="Məs. Bravo, Araz"></div>
+        <div class="field"><label>Profil şəkli URL (istəyə görə)</label><input type="text" id="restaurantPhotoURL" placeholder="https://..."></div>
+        <div class="field admin-only"><label>Komissiya (%)</label><input type="number" id="restaurantCommission" value="18" min="0" required></div>
+        <div style="display:flex;gap:12px;">
+          <div class="field" style="flex:1;"><label>Açılış saatı</label><input type="time" id="restaurantOpenTime" value="09:00"></div>
+          <div class="field" style="flex:1;"><label>Bağlanış saatı</label><input type="time" id="restaurantCloseTime" value="23:00"></div>
+        </div>
+        <div class="settings-row" style="padding:6px 0;">
+          <div><h4>İş saatlarına görə avtomatik aç/bağla</h4><p>Aktivləşdirilsə restoran yalnız yuxarıdakı saatlar arasında "Açıq" göstərilir</p></div>
+          <div class="switch on" id="restaurantAutoHoursSwitch"></div>
+        </div>
+        <div class="settings-row" style="padding:6px 0;">
+          <div><h4>Təsdiqlənmiş restoran</h4><p>Aktivləşdirilsə restoran platformada göstərilir və sifariş qəbul edə bilər</p></div>
+          <div class="switch on" id="restaurantVerifiedSwitch"></div>
+        </div>
+        <div class="field"><label>Ünvan axtar</label>
+          <div class="search-address-row">
+            <input type="text" id="restaurantAddressSearch" placeholder="Məs. 28 May küçəsi, Bakı">
+            <button type="button" class="btn-secondary" id="restaurantAddressSearchBtn">Axtar</button>
+          </div>
+        </div>
+        <div class="mini-map-pick" id="restaurantMiniMap"></div>
+        <div class="field-hint">Xəritədə markeri sürüşdürərək dəqiq restoran yerini seçin.</div>
+        <input type="hidden" id="restaurantLatInput">
+        <input type="hidden" id="restaurantLngInput">
+        <div class="field"><label>Ünvan (mətn)</label><input type="text" id="restaurantAddressText" required></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('restaurantModal').classList.add('hidden')">Ləğv et</button>
+        <button type="submit" class="btn-primary" id="restaurantFormSubmitBtn">Əlavə et</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="notifyRestaurantModal">
+  <div class="modal">
+    <div class="modal-head"><h3>🔔 Restorana bildiriş göndər</h3><button class="modal-close" onclick="document.getElementById('notifyRestaurantModal').classList.add('hidden')">&times;</button></div>
+    <form id="notifyRestaurantForm">
+      <div class="modal-body">
+        <div class="field"><label>Restoran</label>
+          <select id="notifyRestaurantSelect" required></select>
+        </div>
+        <div class="field"><label>Bildiriş başlığı</label><input type="text" id="notifyRestaurantTitle" placeholder="Məs. Diqqət! Yeni qayda" required></div>
+        <div class="field"><label>Bildiriş mətni</label><textarea id="notifyRestaurantBody" rows="4" placeholder="Restorana çatdırılacaq mətn" required></textarea></div>
+        <div class="field-hint">Bildiriş dərhal restoran panelində zəng ikonu ilə göstəriləcək.</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('notifyRestaurantModal').classList.add('hidden')">Ləğv et</button>
+        <button type="submit" class="btn-primary" id="notifyRestaurantSubmitBtn">Göndər</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="promoModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Yeni promo kod</h3><button class="modal-close" onclick="document.getElementById('promoModal').classList.add('hidden')">&times;</button></div>
+    <form id="promoForm">
+      <div class="modal-body">
+        <div class="field"><label>Promo kod</label><input type="text" id="promoCode" placeholder="Məs. BAKUGO20" required style="text-transform:uppercase;"></div>
+        <div class="row2">
+          <div class="field"><label>Endirim növü</label>
+            <select id="promoDiscountType">
+              <option value="percent">Faiz (%)</option>
+              <option value="fixed">Sabit məbləğ (AZN)</option>
+            </select>
+          </div>
+          <div class="field"><label>Endirim dəyəri</label><input type="number" id="promoDiscountValue" min="0" step="0.1" required></div>
+        </div>
+        <div class="row2">
+          <div class="field"><label>Minimum sifariş məbləği (AZN)</label><input type="number" id="promoMinOrder" min="0" value="0"></div>
+          <div class="field"><label>Maksimum istifadə sayı</label><input type="number" id="promoMaxUses" min="0" placeholder="Limitsiz üçün boş buraxın"></div>
+        </div>
+        <div class="field"><label>Etibarlılıq bitmə tarixi</label><input type="date" id="promoExpiry" required></div>
+        <div class="settings-row" style="padding:6px 0;">
+          <div><h4>Aktiv</h4><p>Aktivləşdirilsə müştərilər dərhal istifadə edə bilər</p></div>
+          <div class="switch on" id="promoActiveSwitch"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('promoModal').classList.add('hidden')">Ləğv et</button>
+        <button type="submit" class="btn-primary" id="promoFormSubmitBtn">Yarat</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="userModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Yeni istifadəçi</h3><button class="modal-close" onclick="document.getElementById('userModal').classList.add('hidden')">&times;</button></div>
+    <form id="userForm">
+      <div class="modal-body">
+        <div class="field"><label>E-poçt (giriş üçün)</label><input type="email" id="userEmail" required></div>
+        <div class="field"><label>Şifrə</label><input type="password" id="userPassword" minlength="6" required></div>
+        <div class="field"><label>Ad</label><input type="text" id="userName" required></div>
+        <div class="field"><label>Soyad</label><input type="text" id="userSurname" required></div>
+        <div class="field"><label>Telefon</label><input type="text" id="userPhone" placeholder="+994 (50) 000-00-00" required></div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('userModal').classList.add('hidden')">Ləğv et</button>
+        <button type="submit" class="btn-primary" id="userFormSubmitBtn">Əlavə et</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="orderModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Sifariş yarat (dəstək əməliyyatı)</h3><button class="modal-close" onclick="document.getElementById('orderModal').classList.add('hidden')">&times;</button></div>
+    <form id="orderForm">
+      <div class="modal-body">
+        <div class="field"><label>Müştəri adı</label><input type="text" id="orderCustomer" required></div>
+        <div class="field"><label>Müştəri telefonu</label><input type="text" id="orderCustomerPhone" required></div>
+        <div class="field"><label>Çatdırılma ünvanı</label><input type="text" id="orderCustomerAddress" required></div>
+        <div class="field"><label>Restoran</label>
+          <select id="orderRestaurant" required></select>
+        </div>
+        <div id="orderMenuPicker" style="margin-bottom:14px;"></div>
+        <div class="field">
+          <label>Çatdırılma haqqı (AZN)</label>
+          <div style="display:flex;gap:8px;">
+            <input type="number" step="0.01" id="orderDeliveryFee" min="0" value="2.5" required style="flex:1;">
+            <button type="button" class="btn-secondary" id="calcZoneFeeBtn" style="white-space:nowrap;">Məsafəyə görə hesabla</button>
+          </div>
+          <p class="field-hint" id="orderZoneHint"></p>
+        </div>
+        <div class="field"><label>Ödəniş üsulu</label>
+          <select id="orderPaymentMethod">
+            <option value="cash">Nağd</option>
+            <option value="card">Kart</option>
+          </select>
+        </div>
+        <div class="hint" id="orderTotalHint">Ümumi məbləğ: 0.00 AZN</div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('orderModal').classList.add('hidden')">Ləğv et</button>
+        <button type="submit" class="btn-primary">Yarat</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="orderDetailModal">
+  <div class="modal">
+    <div class="modal-head"><h3 id="orderDetailTitle">Sifariş #</h3><button class="modal-close" onclick="document.getElementById('orderDetailModal').classList.add('hidden')">&times;</button></div>
+    <div class="modal-body" id="orderDetailBody"></div>
+    <div class="modal-footer" id="orderDetailFooter"></div>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="transactionModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Yeni əməliyyat</h3><button class="modal-close" onclick="document.getElementById('transactionModal').classList.add('hidden')">&times;</button></div>
+    <form id="transactionForm">
+      <div class="modal-body">
+        <div class="field"><label>Tərəf (Məs: KFC və ya Murad H. (kuryer))</label><input type="text" id="txnParty" required></div>
+        <div class="field"><label>Məbləğ (AZN)</label><input type="number" step="0.01" id="txnAmount" min="0" required></div>
+        <div class="field"><label>Ödəniş üsulu</label>
+          <select id="txnMethod">
+            <option value="card">Bank kartı</option>
+            <option value="bank">Bank hesabı (IBAN)</option>
+          </select>
+        </div>
+        <div class="field"><label id="txnDetailLabel">Kart nömrəsi</label><input type="text" id="txnDetail" placeholder="4169 XXXX XXXX 1234" required></div>
+        <div class="field"><label>Status</label>
+          <select id="txnStatus"><option>Ödənilib</option><option>Gözləyir</option></select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('transactionModal').classList.add('hidden')">Ləğv et</button>
+        <button type="submit" class="btn-primary">Əlavə et</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="adminModal">
+  <div class="modal">
+    <div class="modal-head"><h3>Yeni admin/operator hesabı</h3><button class="modal-close" onclick="document.getElementById('adminModal').classList.add('hidden')">&times;</button></div>
+    <form id="adminForm">
+      <div class="modal-body">
+        <div class="field"><label>E-poçt</label><input type="email" id="adminEmail" required></div>
+        <div class="field"><label>Şifrə</label><input type="password" id="adminPassword" minlength="6" required></div>
+        <div class="field"><label>Rol</label>
+          <select id="adminRoleSelect">
+            <option value="operator">Operator (məhdud giriş)</option>
+            <option value="admin">Administrator (tam giriş)</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" onclick="document.getElementById('adminModal').classList.add('hidden')">Ləğv et</button>
+        <button type="submit" class="btn-primary" id="adminFormSubmitBtn">Yarat</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay hidden" id="productsModal">
+  <div class="modal" style="max-width:480px;">
+    <div class="modal-head"><h3 id="productsModalTitle">Menyu</h3><button class="modal-close" onclick="closeProductsModal()">&times;</button></div>
+    <div class="modal-body">
+      <div id="productsList" style="margin-bottom:16px;"></div>
+      <div id="productsEmptyState" class="empty-state hidden" style="padding:24px 10px;"><b>Bu restoranda hələ məhsul yoxdur</b></div>
+      <form id="productForm" style="border-top:1px solid var(--border);padding-top:16px;">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="field" style="flex:2;min-width:140px;"><label>Məhsul adı</label><input type="text" id="productName" required></div>
+          <div class="field" style="flex:1;min-width:90px;"><label>Qiymət (AZN)</label><input type="number" step="0.01" min="0" id="productPrice" required></div>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <div class="field" style="flex:1;min-width:140px;">
+            <label>Kateqoriya</label>
+            <select id="productCategory">
+              <option value="Restoranlar">🍔 Restoranlar</option>
+              <option value="Market">🛒 Market</option>
+              <option value="İçkilər">🥤 İçkilər</option>
+              <option value="Alkoqol">🍷 Alkoqol 🔞</option>
+              <option value="Tütün">🚬 Tütün 🔞</option>
+              <option value="Aptek">💊 Aptek</option>
+              <option value="Gül">💐 Gül</option>
+              <option value="Hədiyyə">🎁 Hədiyyə</option>
+              <option value="Zoo">🐶 Zoo</option>
+              <option value="Uşaq">👶 Uşaq</option>
+              <option value="Baxım">💄 Baxım</option>
+              <option value="Geyim">👕 Geyim</option>
+              <option value="Digər">✨ Digər</option>
+            </select>
+          </div>
+          <div class="field" style="flex:1;min-width:140px;"><label>Şəkil URL (istəyə görə)</label><input type="text" id="productImg" placeholder="https://..."></div>
+        </div>
+        <div class="field-hint" style="margin-top:-4px;">Boş buraxsanız standart şəkil istifadə olunacaq.</div>
+        <div class="settings-row" style="padding:6px 0;">
+          <div><h4>Endirim aktivdir</h4><p>Aktivləşdirilsə, faiz əsasında endirimli qiymət hesablanır</p></div>
+          <div class="switch" id="productDiscountSwitch"></div>
+        </div>
+        <div id="productDiscountFields" class="hidden" style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+          <div class="field" style="flex:1;min-width:120px;"><label>Endirim (%)</label><input type="number" id="productDiscountPercent" min="0" max="95" value="0"></div>
+        </div>
+        <button type="submit" class="btn-primary" style="width:100%;">Məhsul əlavə et</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+(function(){
+  function show(msg){
+    var b=document.getElementById('__dbg');
+    if(!b){b=document.createElement('div');b.id='__dbg';
+      b.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#b91c1c;color:#fff;font:13px/1.4 monospace;padding:10px;max-height:40vh;overflow:auto;white-space:pre-wrap';
+      document.documentElement.appendChild(b);}
+    b.textContent+=msg+"\n";
+  }
+  window.addEventListener('error',function(e){show('XƏTA: '+(e.message||'')+(e.filename?' ('+e.filename.split('/').pop()+':'+e.lineno+')':''));});
+  window.addEventListener('unhandledrejection',function(e){show('XƏTA (promise): '+((e.reason&&(e.reason.code||e.reason.message))||e.reason));});
+  setTimeout(function(){ if(!window.__adminBooted) show('Skript işə düşmədi: Firebase kitabxanası yüklənmir (internet / reklam bloklayıcı / VPN?) və ya fayl file:// ilə açılıb.'); },5000);
+})();
+</script>
+<script type="module">
+window.__adminBooted = true;
+/* ============================================================
+   FIREBASE İNİSİALİZASİYASI (əsas + ikinci instans)
+   İkinci instans yalnız yeni kuryer/restoran/istifadəçi hesabı
+   yaratmaq üçündür — admin sessiyasını pozmadan yeni Auth
+   hesabı yaratmağa imkan verir.
+   ============================================================ */
+import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-auth.js";
+import { getFirestore, collection, addDoc, onSnapshot, doc, setDoc, getDoc, updateDoc, deleteDoc, query, where, getDocs, orderBy, serverTimestamp, increment, writeBatch } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBQIDfObXpxNa1hVAYDmigSi9u49y_BJQc",
+  authDomain: "bkaugo.firebaseapp.com",
+  projectId: "bkaugo",
+  storageBucket: "bkaugo.firebasestorage.app",
+  messagingSenderId: "568740538737",
+  appId: "1:568740538737:web:9b2ab40d0b728789a1aed0",
+  measurementId: "G-44T95W0PSX"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+/* Admin sessiyasını pozmadan yeni Firebase Auth hesabı yaratmaq */
+async function createAuthAccountSilently(email, password) {
+  const secondaryApp = initializeApp(firebaseConfig, "Secondary-" + Date.now());
+  const secondaryAuth = getAuth(secondaryApp);
+  try {
+    const cred = await createUserWithEmailAndPassword(secondaryAuth, email, password);
+    const uid = cred.user.uid;
+    await signOut(secondaryAuth).catch(() => {});
+    await deleteApp(secondaryApp).catch(() => {});
+    return uid;
+  } catch (err) {
+    try { await deleteApp(secondaryApp); } catch (_) {}
+    throw err;
+  }
+}
+
+/* ============================================================
+   KÖMƏKÇİ FUNKSİYALAR
+   ============================================================ */
+function setLoading(btn, isLoading, text) {
+  if (isLoading) {
+    btn.disabled = true;
+    btn.dataset.origText = btn.dataset.origText || btn.innerHTML;
+    btn.innerHTML = `<div class="spinner"></div><span>Gözləyin...</span>`;
+  } else {
+    btn.disabled = false;
+    btn.innerHTML = text || btn.dataset.origText || btn.innerHTML;
+  }
+}
+
+function debounce(func, delay) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), delay);
+  };
+}
+
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, (m) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[m]));
+}
+
+function money(n) {
+  const v = Number(n);
+  return (isNaN(v) ? 0 : v).toFixed(2);
+}
+
+function tsToDate(ts) {
+  if (!ts) return null;
+  if (typeof ts === 'number') return new Date(ts);
+  if (ts.toDate) return ts.toDate();
+  if (ts instanceof Date) return ts;
+  return new Date(ts);
+}
+
+function fmtDate(ts) {
+  const d = tsToDate(ts);
+  return d ? d.toLocaleString('az-AZ') : '---';
+}
+
+/* ============================================================
+   SİFARİŞ STATUS SİSTEMİ — bütün 4 tətbiqlə eyni İngiliscə kodlar
+   ============================================================ */
+const ORDER_STATUS_LABEL = {
+  preparing: "🍔 Hazırlanır",
+  searching_courier: "🔍 Kuryer axtarılır",
+  courier_accepted: "🛵 Kuryer yolda",
+  collected: "🛍️ Müştəriyə çatdırılır",
+  delivered: "🏁 Çatdırıldı",
+  cancelled: "❌ Ləğv edilib"
+};
+const ORDER_STATUS_BADGE = {
+  preparing: "warning", searching_courier: "warning", courier_accepted: "warning",
+  collected: "warning", delivered: "success", cancelled: "danger"
+};
+const ORDER_STATUS_PROGRESS = {
+  preparing: 20, searching_courier: 50, courier_accepted: 65, collected: 80, delivered: 100, cancelled: 0
+};
+function orderStatusLabel(o) {
+  if (o.status === 'preparing' && o.restaurantAccepted !== true) return "🆕 Yeni — qəbul gözlənilir";
+  return ORDER_STATUS_LABEL[o.status] || o.status || '—';
+}
+const ACTIVE_ORDER_STATUSES = ['preparing', 'searching_courier', 'courier_accepted', 'collected'];
+
+/* ============================================================
+   APPLİKASİYA GLOBAL STATE
+   ============================================================ */
+let state = {
+  orders: [],
+  couriers: [],
+  restaurants: [],
+  users: [],
+  products: [],
+  transactions: [],
+  withdrawals: [],
+  campaigns: [],
+  reviews: [],
+  promoCodes: [],
+  admins: [],
+  settings: {
+    commission: 18, courierFee: 2.5, minOrder: 10, notifyOnAssign: true,
+    deliveryZones: [
+      { name: 'Mərkəz', maxDistanceKm: 3, fee: 2.5 },
+      { name: 'Yaxın', maxDistanceKm: 6, fee: 4 },
+      { name: 'Uzaq', maxDistanceKm: 10, fee: 6 },
+      { name: 'Kənar', maxDistanceKm: 999, fee: 9 }
+    ]
+  }
+};
+let currentOrderFilter = 'all';
+let searchTerm = '';
+let myChartInstance = null;
+let listenersBound = false;
+
+const BAKU_CENTER = { lat: 40.4093, lng: 49.8671 };
+
+/* ============================================================
+   TOAST Uİ BİLDİRİŞLƏRİ
+   ============================================================ */
+function toast(message, type = 'info') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast ' + type;
+  el.innerHTML = `<span>${esc(message)}</span>`;
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.opacity = '0';
+    el.style.transition = 'opacity .25s ease';
+    setTimeout(() => el.remove(), 250);
+  }, 3200);
+}
+
+/* ============================================================
+   MOBİL MENYU LOGİKASI (HAMBURGER)
+   ============================================================ */
+const sidebar = document.querySelector('.sidebar');
+const sidebarOverlay = document.getElementById('sidebarOverlay');
+const hamburgerBtn = document.getElementById('hamburgerBtn');
+
+function toggleSidebar() {
+  sidebar.classList.toggle('open');
+  sidebarOverlay.classList.toggle('show');
+}
+hamburgerBtn.addEventListener('click', toggleSidebar);
+sidebarOverlay.addEventListener('click', toggleSidebar);
+
+/* ============================================================
+   BALANS HESABLAMALARI — hər tətbiqin öz düsturu ilə eyni məntiq
+   ============================================================ */
+function courierAvailableBalance(courierId) {
+  const delivered = state.orders.filter(o => o.courierId === courierId && o.status === 'delivered');
+  const earned = delivered.reduce((s, o) => s + parseFloat(o.courierFee || o.courierEarn || 2.5), 0);
+  const withdrawn = state.withdrawals
+    .filter(w => w.courierId === courierId && w.status !== 'rejected')
+    .reduce((s, w) => s + parseFloat(w.amount || 0), 0);
+  return Math.max(0, earned - withdrawn);
+}
+function restaurantAvailableBalance(restaurantId, commissionRate) {
+  const delivered = state.orders.filter(o => o.restaurantId === restaurantId && o.status === 'delivered');
+  const grossTotal = delivered.reduce((s, o) => s + parseFloat(o.totalAmount || o.price || 0), 0);
+  const net = grossTotal * (1 - (Number(commissionRate) || 0) / 100);
+  const withdrawn = state.withdrawals
+    .filter(w => w.restaurantId === restaurantId && w.status !== 'rejected' && w.status !== 'cancelled')
+    .reduce((s, w) => s + parseFloat(w.amount || 0), 0);
+  return Math.max(0, net - withdrawn);
+}
+function ordersCountForRestaurant(id) { return state.orders.filter(o => o.restaurantId === id).length; }
+function ordersCountForCourier(id) { return state.orders.filter(o => o.courierId === id && o.status === 'delivered').length; }
+function ordersCountForUser(id) { return state.orders.filter(o => o.userId === id || o.customerId === id).length; }
+
+/* ============================================================
+   FIRESTORE REAL-TIME BİNDİNGLƏR
+   ============================================================ */
+let unsubscribers = [];
+
+function teardownRealtime() {
+  unsubscribers.forEach(u => { try { u(); } catch(e){} });
+  unsubscribers = [];
+  listenersBound = false;
+}
+
+async function loadSettings() {
+  try {
+    const snap = await getDoc(doc(db, 'settings', 'main'));
+    if (snap.exists()) {
+      state.settings = { ...state.settings, ...snap.data() };
+    } else {
+      await setDoc(doc(db, 'settings', 'main'), state.settings);
+    }
+  } catch (err) {
+    console.error('Parametrləri yükləmək mümkün olmadı', err);
+  }
+  applySettingsToUi();
+}
+
+function applySettingsToUi() {
+  document.getElementById('settingCommission').value = state.settings.commission;
+  document.getElementById('settingCourierFee').value = state.settings.courierFee;
+  document.getElementById('settingMinOrder').value = state.settings.minOrder;
+  document.getElementById('notifNewOrder').classList.toggle('on', !!state.settings.notifyOnAssign);
+  renderDeliveryZonesTable();
+}
+
+/* ============================================================
+   ÇATDIRILMA ZONALARI (məsafəyə görə avtomatik haqq)
+   ============================================================ */
+function renderDeliveryZonesTable() {
+  const body = document.getElementById('deliveryZonesBody');
+  if (!body) return;
+  const zones = (state.settings.deliveryZones && state.settings.deliveryZones.length)
+    ? state.settings.deliveryZones
+    : [];
+  body.innerHTML = zones.map((z, i) => `
+    <tr data-zone-row="${i}">
+      <td><input type="text" class="zone-name-input" style="width:100%;padding:8px;border-radius:8px;border:1px solid var(--border);font:inherit;" value="${esc(z.name || '')}" placeholder="Məs. Mərkəz"></td>
+      <td><input type="number" step="0.1" min="0" class="zone-dist-input" style="width:100px;padding:8px;border-radius:8px;border:1px solid var(--border);font:inherit;" value="${z.maxDistanceKm ?? ''}" placeholder="km"></td>
+      <td><input type="number" step="0.01" min="0" class="zone-fee-input" style="width:100px;padding:8px;border-radius:8px;border:1px solid var(--border);font:inherit;" value="${z.fee ?? ''}" placeholder="AZN"></td>
+      <td><button type="button" class="btn-ghost-danger" data-action="delete-zone" data-index="${i}">Sil</button></td>
+    </tr>
+  `).join('');
+  document.getElementById('deliveryZonesEmpty').classList.toggle('hidden', zones.length > 0);
+}
+
+document.getElementById('deliveryZonesBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action="delete-zone"]');
+  if (!btn) return;
+  const idx = parseInt(btn.dataset.index);
+  state.settings.deliveryZones.splice(idx, 1);
+  renderDeliveryZonesTable();
+});
+
+document.getElementById('addDeliveryZoneBtn').addEventListener('click', () => {
+  if (!Array.isArray(state.settings.deliveryZones)) state.settings.deliveryZones = [];
+  state.settings.deliveryZones.push({ name: '', maxDistanceKm: '', fee: '' });
+  renderDeliveryZonesTable();
+});
+
+function collectDeliveryZonesFromUi() {
+  const rows = document.querySelectorAll('#deliveryZonesBody tr[data-zone-row]');
+  const zones = [];
+  rows.forEach(row => {
+    const name = row.querySelector('.zone-name-input').value.trim();
+    const maxDistanceKm = parseFloat(row.querySelector('.zone-dist-input').value);
+    const fee = parseFloat(row.querySelector('.zone-fee-input').value);
+    if (!name || isNaN(maxDistanceKm) || isNaN(fee)) return;
+    zones.push({ name, maxDistanceKm, fee });
+  });
+  zones.sort((a, b) => a.maxDistanceKm - b.maxDistanceKm);
+  return zones;
+}
+
+document.getElementById('saveDeliveryZonesBtn').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  const zones = collectDeliveryZonesFromUi();
+  if (zones.length === 0) { toast('Ən azı bir zona daxil edin (ad, məsafə, haqq)', 'error'); return; }
+  setLoading(btn, true, 'Zonaları yadda saxla');
+  try {
+    state.settings.deliveryZones = zones;
+    await setDoc(doc(db, 'settings', 'main'), { deliveryZones: zones }, { merge: true });
+    renderDeliveryZonesTable();
+    toast('Çatdırılma zonaları yadda saxlanıldı', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Zonaları saxlamaq mümkün olmadı', 'error');
+  } finally {
+    setLoading(btn, false, 'Zonaları yadda saxla');
+  }
+});
+
+/* ================== GEOHASH (müştəri tətbiqindəki ilə EYNİ alqoritm) ==================
+   Müştəri tərəfi restoranları "geohash" sahəsinə görə sorğulayır (bax: index2089-geohash.html,
+   getNearbyRestaurantIds()/backfillRestaurantGeohashes()). Ona görə burada, admin paneldən
+   restoran yaradılanda/koordinatı redaktə ediləndə, EYNİ "geohash" sahəsi avtomatik yazılmalıdır -
+   əks halda yeni/köçürülmüş restoran müştəri sorğusuna heç vaxt düşməyəcək. */
+const GEOHASH_BASE32 = "0123456789bcdefghjkmnpqrstuvwxyz";
+
+function encodeGeohash(lat, lng, precision = 9) {
+  let latRange = [-90, 90];
+  let lngRange = [-180, 180];
+  let isEvenBit = true;
+  let bit = 0, ch = 0, geohash = "";
+  while (geohash.length < precision) {
+    if (isEvenBit) {
+      const mid = (lngRange[0] + lngRange[1]) / 2;
+      if (lng >= mid) { ch = (ch << 1) + 1; lngRange[0] = mid; }
+      else { ch = (ch << 1); lngRange[1] = mid; }
+    } else {
+      const mid = (latRange[0] + latRange[1]) / 2;
+      if (lat >= mid) { ch = (ch << 1) + 1; latRange[0] = mid; }
+      else { ch = (ch << 1); latRange[1] = mid; }
+    }
+    isEvenBit = !isEvenBit;
+    bit++;
+    if (bit === 5) { geohash += GEOHASH_BASE32.charAt(ch); bit = 0; ch = 0; }
+  }
+  return geohash;
+}
+
+/* Haversine məsafə düsturu (km) */
+function distanceKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat/2) ** 2 + Math.cos(lat1 * Math.PI/180) * Math.cos(lat2 * Math.PI/180) * Math.sin(dLng/2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function zoneForDistance(km) {
+  const zones = (state.settings.deliveryZones || []).slice().sort((a, b) => a.maxDistanceKm - b.maxDistanceKm);
+  return zones.find(z => km <= z.maxDistanceKm) || zones[zones.length - 1] || null;
+}
+
+function setServerStatus(ok, text) {
+  const row = document.getElementById('serverStatusRow');
+  row.classList.toggle('bad', !ok);
+  document.getElementById('serverStatusText').textContent = text;
+}
+
+async function bootstrapData() {
+  if (listenersBound) return;
+  listenersBound = true;
+
+  await loadSettings();
+  setServerStatus(true, 'Firestore verilənlər bazasına qoşulub.');
+
+  const onErr = (label) => (err) => {
+    console.error(label, err);
+    setServerStatus(false, 'Bağlantı problemi: ' + label);
+  };
+
+  unsubscribers.push(onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc')), (snap) => {
+    state.orders = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderOrders();
+    renderAdvancedCharts();
+    updateDashboardCounters();
+    if (document.getElementById('courier').classList.contains('hidden') === false) renderCouriers();
+    if (document.getElementById('restaurant').classList.contains('hidden') === false) renderRestaurants();
+  }, onErr('sifarişlər')));
+
+  unsubscribers.push(onSnapshot(collection(db, 'couriers'), (snap) => {
+    state.couriers = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderCouriers();
+    updateDashboardCounters();
+    updateFcmTokenCounts();
+    if (courierMap) renderMapMarkers();
+  }, onErr('kuryerlər')));
+
+  unsubscribers.push(onSnapshot(collection(db, 'restaurants'), (snap) => {
+    state.restaurants = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderRestaurants();
+    updateDashboardCounters();
+    updateFcmTokenCounts();
+    populateOrderRestaurantSelect();
+    if (courierMap) renderMapMarkers();
+  }, onErr('restoranlar')));
+
+  unsubscribers.push(onSnapshot(collection(db, 'users'), (snap) => {
+    state.users = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderUsers();
+    updateDashboardCounters();
+    updateFcmTokenCounts();
+  }, onErr('istifadəçilər')));
+
+  unsubscribers.push(onSnapshot(collection(db, 'products'), (snap) => {
+    state.products = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    if (currentProductsRestaurantId) renderProductsList();
+  }, onErr('məhsullar')));
+
+  unsubscribers.push(onSnapshot(collection(db, 'transactions'), (snap) => {
+    state.transactions = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderTransactions();
+  }, onErr('əməliyyatlar')));
+
+  unsubscribers.push(onSnapshot(collection(db, 'withdrawals'), (snap) => {
+    state.withdrawals = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderWithdrawals();
+    updateWithdrawalsBadge();
+    renderCouriers();
+    renderRestaurants();
+  }, onErr('pul çıxarmalar')));
+
+  unsubscribers.push(onSnapshot(collection(db, 'campaigns'), (snap) => {
+    state.campaigns = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderCampaigns();
+  }, onErr('kampaniyalar')));
+
+  unsubscribers.push(onSnapshot(collection(db, 'reviews'), (snap) => {
+    state.reviews = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderReviews();
+  }, onErr('rəylər')));
+
+  unsubscribers.push(onSnapshot(collection(db, 'promoCodes'), (snap) => {
+    state.promoCodes = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderPromoCodes();
+  }, onErr('promo kodlar')));
+
+  if (currentUserRole === 'admin') {
+    unsubscribers.push(onSnapshot(collection(db, 'admins'), (snap) => {
+      state.admins = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      renderAdminsTable();
+    }, onErr('adminlər')));
+  }
+}
+
+function updateDashboardCounters() {
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const ordersToday = state.orders.filter(o => {
+    const d = tsToDate(o.createdAt);
+    return d && d >= todayStart;
+  });
+  document.getElementById('ordersCount').textContent = ordersToday.length;
+  document.getElementById('usersCountCard').textContent = state.users.length;
+  document.getElementById('onlineCouriersCard').textContent = state.couriers.filter(c => c.status === 'online').length;
+  document.getElementById('activeRestaurantsCard').textContent = state.restaurants.filter(r => r.active).length;
+
+  const activeCount = state.orders.filter(o => ACTIVE_ORDER_STATUSES.includes(o.status)).length;
+  const badge = document.getElementById('ordersActiveBadge');
+  badge.textContent = activeCount;
+  badge.classList.toggle('hidden', activeCount === 0);
+}
+
+/* ============================================================
+   RENDER: SİFARİŞLƏR
+   ============================================================ */
+function matchesSearch(fields) {
+  if (!searchTerm) return true;
+  return fields.some(f => String(f || '').toLowerCase().includes(searchTerm));
+}
+
+function orderRouteName(o) {
+  return `${esc(o.restaurantName || '—')} → ${o.customerAddress ? esc(o.customerAddress).slice(0,22) : '—'}`;
+}
+
+function buildOrderRow(o, showActions) {
+  const canCancel = !['delivered', 'cancelled'].includes(o.status);
+  const actionCell = showActions ? `<td>
+    <div class="row-actions">
+      <button class="btn-secondary" data-action="view-order" data-id="${o.id}">Ətraflı</button>
+      ${canCancel ? `<button class="btn-ghost-danger" data-action="cancel-order" data-id="${o.id}">Ləğv et</button>` : ''}
+    </div>
+  </td>` : '';
+
+  return `<tr>
+    <td>#${o.id.slice(0,5).toUpperCase()}</td>
+    <td class="cell-user"><div class="mini-avatar">${esc((o.customerName||'?')[0])}</div>${esc(o.customerName || '—')}</td>
+    <td>${esc(o.restaurantName || '—')}</td>
+    <td>${o.courierId ? (state.couriers.find(c=>c.id===o.courierId) ? esc(state.couriers.find(c=>c.id===o.courierId).name + ' ' + (state.couriers.find(c=>c.id===o.courierId).surname||'')) : 'Kuryer') : '<i>Təyin olunmayıb</i>'}</td>
+    <td><span class="badge ${ORDER_STATUS_BADGE[o.status]||'warning'}">${esc(orderStatusLabel(o))}</span></td>
+    <td><b>${money(o.totalAmount || o.price)} AZN</b></td>
+    ${actionCell}
+  </tr>`;
+}
+
+function renderOrders() {
+  const dashBody = document.getElementById('dashboardOrdersBody');
+  const recent = state.orders.slice(0, 5);
+  dashBody.innerHTML = recent.map(o => `<tr>
+    <td>#${o.id.slice(0,5).toUpperCase()}</td>
+    <td class="cell-user"><div class="mini-avatar">${esc((o.customerName||'?')[0])}</div>${esc(o.customerName || '—')}</td>
+    <td>${esc(o.restaurantName || '—')}</td>
+    <td>${o.courierId ? 'Təyin edilib' : '<i>—</i>'}</td>
+    <td>${orderRouteName(o)}</td>
+    <td><b>${money(o.totalAmount || o.price)} AZN</b></td>
+    <td><span class="badge ${ORDER_STATUS_BADGE[o.status]||'warning'}">${esc(orderStatusLabel(o))}</span></td>
+  </tr>`).join('');
+  document.getElementById('dashboardOrdersEmpty').classList.toggle('hidden', recent.length > 0);
+
+  let filtered = state.orders;
+  if (currentOrderFilter === 'active') filtered = filtered.filter(o => ACTIVE_ORDER_STATUSES.includes(o.status));
+  if (currentOrderFilter === 'delivered') filtered = filtered.filter(o => o.status === 'delivered');
+  if (currentOrderFilter === 'cancelled') filtered = filtered.filter(o => o.status === 'cancelled');
+  filtered = filtered.filter(o => matchesSearch([o.customerName, o.restaurantName, o.customerPhone]));
+
+  document.getElementById('ordersFullBody').innerHTML = filtered.map(o => buildOrderRow(o, true)).join('');
+  document.getElementById('ordersFullEmpty').classList.toggle('hidden', filtered.length > 0);
+}
+
+document.getElementById('ordersTabs').addEventListener('click', (e) => {
+  if (e.target.tagName !== 'BUTTON') return;
+  document.querySelectorAll('#ordersTabs button').forEach(b => b.classList.remove('active'));
+  e.target.classList.add('active');
+  currentOrderFilter = e.target.dataset.filter;
+  renderOrders();
+});
+
+document.getElementById('ordersFullBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'cancel-order') cancelOrder(id);
+  if (btn.dataset.action === 'view-order') openOrderDetail(id);
+});
+
+const CANCEL_REASONS = [
+  'Müştəri imtina etdi',
+  'Restoran məhsulu hazırlaya bilmədi',
+  'Kuryer tapılmadı',
+  'Ünvan səhvdir / əlçatmazdır',
+  'Ödəniş problemi',
+  'Digər (mətn daxil et)'
+];
+
+async function cancelOrder(orderId) {
+  const optionsList = CANCEL_REASONS.map((r, i) => `${i + 1}. ${r}`).join('\n');
+  const choice = prompt(`Bu sifarişi ləğv etmək istədiyinizə əminsiniz?\nLəğvetmə səbəbini seçin (rəqəm daxil edin) və ya birbaşa mətn yazın:\n${optionsList}`, '1');
+  if (choice === null) return; // admin imtina etdi
+
+  let reason = choice.trim();
+  const idx = parseInt(reason);
+  if (!isNaN(idx) && idx >= 1 && idx <= CANCEL_REASONS.length) {
+    reason = CANCEL_REASONS[idx - 1];
+    if (reason === 'Digər (mətn daxil et)') {
+      const custom = prompt('Ləğvetmə səbəbini yazın:', '');
+      reason = custom && custom.trim() ? custom.trim() : 'Səbəb qeyd olunmayıb';
+    }
+  }
+  if (!reason) reason = 'Səbəb qeyd olunmayıb';
+
+  try {
+    await updateDoc(doc(db, 'orders', orderId), { status: 'cancelled', progress: 0, cancelReason: reason, cancelledAt: Date.now() });
+    toast('Sifariş ləğv edildi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Sifarişi ləğv etmək mümkün olmadı', 'error');
+  }
+}
+
+function openOrderDetail(orderId) {
+  const o = state.orders.find(x => x.id === orderId);
+  if (!o) return;
+  document.getElementById('orderDetailTitle').textContent = `Sifariş #${o.id.slice(0,6).toUpperCase()}`;
+  const itemsHtml = Array.isArray(o.items) && o.items.length
+    ? `<div class="items-table">${o.items.map(i => `<div><span>${esc(i.name)}${i.unit ? ' · '+esc(i.unit) : ''}</span><b>${money(i.price)} AZN</b></div>`).join('')}</div>`
+    : '<p class="hint">Məhsul siyahısı yoxdur</p>';
+  const courier = o.courierId ? state.couriers.find(c => c.id === o.courierId) : null;
+  document.getElementById('orderDetailBody').innerHTML = `
+    <div class="detail-grid">
+      <div><div class="dlabel">Status</div><div class="dval"><span class="badge ${ORDER_STATUS_BADGE[o.status]||'warning'}">${esc(orderStatusLabel(o))}</span></div></div>
+      <div><div class="dlabel">Ödəniş</div><div class="dval">${esc(o.paymentMethodLabel || o.paymentMethod || '—')}</div></div>
+      <div><div class="dlabel">Müştəri</div><div class="dval">${esc(o.customerName || '—')} ${esc(o.customerSurname||'')}</div></div>
+      <div><div class="dlabel">Telefon</div><div class="dval">${esc(o.customerPhone || '—')}</div></div>
+      <div style="grid-column:1/3;"><div class="dlabel">Çatdırılma ünvanı</div><div class="dval">${esc(o.customerAddress || '—')}</div></div>
+      <div><div class="dlabel">Restoran</div><div class="dval">${esc(o.restaurantName || '—')}</div></div>
+      <div><div class="dlabel">Restoran telefonu</div><div class="dval">${esc(o.restaurantPhone || '—')}</div></div>
+      <div><div class="dlabel">Kuryer</div><div class="dval">${courier ? esc(courier.name+' '+(courier.surname||'')) : '<i>Təyin olunmayıb</i>'}</div></div>
+      <div><div class="dlabel">Çatdırılma haqqı</div><div class="dval">${money(o.deliveryFee)} AZN</div></div>
+      <div style="grid-column:1/3;"><div class="dlabel">Qeyd</div><div class="dval">${esc(o.note || '—')}</div></div>
+      ${o.status === 'cancelled' ? `<div style="grid-column:1/3;"><div class="dlabel">Ləğvetmə səbəbi</div><div class="dval" style="color:var(--danger);">${esc(o.cancelReason || 'Qeyd olunmayıb')}</div></div>` : ''}
+      <div><div class="dlabel">Yaradılma tarixi</div><div class="dval">${fmtDate(o.createdAt)}</div></div>
+      <div><div class="dlabel">Ümumi məbləğ</div><div class="dval">${money(o.totalAmount||o.price)} AZN</div></div>
+    </div>
+    ${itemsHtml}
+    <div class="progress-track"><div class="progress-fill" style="width:${o.progress ?? ORDER_STATUS_PROGRESS[o.status] ?? 0}%;"></div></div>
+  `;
+  const canCancel = !['delivered', 'cancelled'].includes(o.status);
+  document.getElementById('orderDetailFooter').innerHTML = canCancel
+    ? `<button class="btn-ghost-danger" onclick="window.__cancelFromDetail('${o.id}')">Sifarişi ləğv et</button>`
+    : '';
+  document.getElementById('orderDetailModal').classList.remove('hidden');
+}
+window.__cancelFromDetail = async function(id) {
+  await cancelOrder(id);
+  document.getElementById('orderDetailModal').classList.add('hidden');
+};
+
+/* ============================================================
+   BİR DƏFƏLİK KÖÇÜRMƏ: kuryer walletBalance/totalEarnings düzəlişi
+   ============================================================
+   SƏBƏB: əvvəllər walletBalance YALNIZ çatdırılanda artırılırdı, pul çıxarma
+   sorğusu göndəriləndə/təsdiqlənəndə HEÇ AZALMIRDI - kuryer tətbiqi isə balansı
+   ayrıca (bütün sifarişləri limitsiz toplayaraq) hesablayıb göstərirdi. Nəticədə
+   iki fərqli rəqəm var idi. İndi walletBalance TƏK mənbədir və pul çıxarma
+   sorğusu ANINDA azaldılır (bax: kuryer tətbiqində submitCourierWithdraw()).
+   Bu funksiya YALNIZ artıq mövcud olan kuryerlərin balansını düzgün rəqəmə
+   BİR DƏFƏLİK sıfırlamaq üçündür: 
+   yeni walletBalance = (bütün çatdırılmış sifarişlərin cəmi) - (rədd edilməyən pul çıxarma sorğularının cəmi)
+   yeni totalEarnings  = (bütün çatdırılmış sifarişlərin cəmi)  [ömürlük, heç azalmır]
+   Admin hesabından brauzer konsolunda BİR DƏFƏ çağırın: await backfillCourierWalletBalances()
+   Təhlükəsizlik qaydaları YALNIZ admin hesabından bu kolleksiyalara yazmağa icazə verir. */
+window.backfillCourierWalletBalances = async function () {
+  console.log('⏳ Kuryer balansları hesablanır...');
+  const couriersSnap = await getDocs(collection(db, 'couriers'));
+  const ordersSnap = await getDocs(query(collection(db, 'orders'), where('status', '==', 'delivered')));
+  const withdrawalsSnap = await getDocs(query(collection(db, 'withdrawals'), where('type', '==', 'courier')));
+
+  const earnedByCourier = {};
+  ordersSnap.forEach((d) => {
+    const o = d.data();
+    if (!o.courierId) return;
+    const fee = parseFloat(o.courierEarn ?? o.courierFee ?? 0) || 0;
+    earnedByCourier[o.courierId] = (earnedByCourier[o.courierId] || 0) + fee;
+  });
+
+  const withdrawnByCourier = {};
+  withdrawalsSnap.forEach((d) => {
+    const w = d.data();
+    if (!w.courierId || w.status === 'rejected') return; // rədd olunanlar balansı azaltmır
+    withdrawnByCourier[w.courierId] = (withdrawnByCourier[w.courierId] || 0) + (parseFloat(w.amount || 0) || 0);
+  });
+
+  let batch = writeBatch(db);
+  let opsInBatch = 0, updated = 0;
+  for (const courierDoc of couriersSnap.docs) {
+    const uid = courierDoc.id;
+    const totalEarnings = earnedByCourier[uid] || 0;
+    const withdrawn = withdrawnByCourier[uid] || 0;
+    const walletBalance = Math.max(0, totalEarnings - withdrawn);
+    batch.update(courierDoc.ref, { walletBalance, totalEarnings });
+    updated++;
+    opsInBatch++;
+    if (opsInBatch >= 400) { // Firestore batch limiti 500-dür, ehtiyat payı saxlayırıq
+      await batch.commit();
+      batch = writeBatch(db);
+      opsInBatch = 0;
+    }
+  }
+  if (opsInBatch > 0) await batch.commit();
+  console.log(`✅ backfillCourierWalletBalances: ${updated} kuryer yeniləndi.`);
+};
+
+/* ============================================================
+   RENDER: KURYERLƏR
+   ============================================================ */
+async function toggleCourierVerified(courierId) {
+  const c = state.couriers.find(x => x.id === courierId);
+  if (!c) return;
+  try {
+    const newVal = c.isVerified ? 0 : 1;
+    await updateDoc(doc(db, 'couriers', courierId), { isVerified: newVal });
+    toast(newVal ? 'Kuryer təsdiqləndi' : 'Kuryerin təsdiqi geri alındı', newVal ? 'success' : 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Status dəyişdirilə bilmədi', 'error');
+  }
+}
+
+async function suspendCourier(courierId) {
+  if (!confirm('Bu kuryeri müvəqqəti dayandırmaq istəyirsiniz? Kuryer oflayn ediləcək və yeni sifariş qəbul edə bilməyəcək.')) return;
+  try {
+    await updateDoc(doc(db, 'couriers', courierId), { status: 'offline', isAvailable: false, isVerified: 0 });
+    toast('Kuryer dayandırıldı', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Əməliyyat uğursuz oldu', 'error');
+  }
+}
+
+/* ============================================================
+   KURYERİ BLOKLA / BLOKDAN ÇIXAR
+   Bloklananda: couriers/{id}.isBlocked = true yazılır. Kuryer tətbiqi
+   (indexkuryer12) bunu canlı dinləyir və kuryeri həmin anda hesabdan
+   çıxarır, həmçinin cihaz və telefonunu da bloklu siyahıya salır ki,
+   yeni hesabla yenidən qoşula bilməsin.
+   Blokdan çıxarılanda: isBlocked = false edilir və həmin kuryerə aid
+   blockedDevices / blockedPhones sənədləri də silinir ki, yenidən
+   giriş edə bilsin.
+   ============================================================ */
+async function blockCourier(courierId) {
+  const c = state.couriers.find(x => x.id === courierId);
+  if (!c) return;
+  if (!confirm(`${(c.name||'')} ${(c.surname||'')} adlı kuryeri bloklamaq istədiyinizə əminsiniz? Kuryer dərhal hesabdan çıxarılacaq və tətbiqə yenidən daxil ola bilməyəcək.`)) return;
+  try {
+    await updateDoc(doc(db, 'couriers', courierId), {
+      isBlocked: true,
+      blockReason: 'Admin tərəfindən bloklanıb',
+      status: 'offline',
+      isAvailable: false
+    });
+    toast('Kuryer bloklandı və hesabdan çıxarıldı', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Kuryeri bloklamaq mümkün olmadı', 'error');
+  }
+}
+
+async function unblockCourier(courierId) {
+  if (!confirm('Bu kuryerin blokunu açmaq istədiyinizə əminsiniz? Kuryer yenidən tətbiqə daxil ola biləcək.')) return;
+  try {
+    await updateDoc(doc(db, 'couriers', courierId), { isBlocked: false, blockReason: '' });
+    // Bu kuryerə aid bloklanmış cihaz və telefon qeydlərini də təmizləyirik
+    const devQ = query(collection(db, 'blockedDevices'), where('courierUid', '==', courierId));
+    const devSnap = await getDocs(devQ);
+    await Promise.all(devSnap.docs.map(d => deleteDoc(d.ref)));
+    const phoneQ = query(collection(db, 'blockedPhones'), where('courierUid', '==', courierId));
+    const phoneSnap = await getDocs(phoneQ);
+    await Promise.all(phoneSnap.docs.map(d => deleteDoc(d.ref)));
+    toast('Kuryerin bloku açıldı', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Blokdan çıxarmaq mümkün olmadı', 'error');
+  }
+}
+
+async function deleteCourier(courierId) {
+  if (!requireAdmin()) return;
+  if (!confirm('Kuryeri Firestore bazasından silmək istədiyinizə əminsiniz? Diqqət: bu, yalnız profil sənədini silir — Firebase Authentication hesabı Firebase Console-dan ayrıca silinməlidir, əks halda kuryer yenidən giriş etsə profili boş yaranacaq.')) return;
+  try {
+    await deleteDoc(doc(db, 'couriers', courierId));
+    toast('Kuryer profili silindi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Kuryeri silmək mümkün olmadı', 'error');
+  }
+}
+
+function renderCouriers() {
+  const grid = document.getElementById('couriersGrid');
+  const filtered = state.couriers.filter(c => matchesSearch([c.name, c.surname, c.phone, c.workingZone]));
+  grid.innerHTML = filtered.map(c => {
+    const online = c.status === 'online';
+    const balance = courierAvailableBalance(c.id);
+    const deliveries = ordersCountForCourier(c.id);
+    const blocked = c.isBlocked === true;
+    return `
+    <div class="entity-card${blocked ? ' blocked-card' : ''}">
+      <div class="entity-top">
+        <span class="status-dot ${online?'':'off'}"><div class="d"></div>${online?'Onlayn':'Oflayn'}</span>
+        ${blocked ? '<span class="unverified-badge" style="background:var(--danger-soft);color:var(--danger);">⛔ Bloklanıb</span>' : (c.isVerified ? '<span class="verified-badge">✓ Təsdiqlənib</span>' : '<span class="unverified-badge">Gözləyir</span>')}
+      </div>
+      <h4>${esc(c.name || '')} ${esc(c.surname || '')}</h4>
+      <div class="meta">${esc(c.phone || '—')} · ${esc(c.workingZone || c.activeCity || 'Zona yoxdur')}</div>
+      <div class="entity-stats">
+        <div><b>${c.rating ?? '—'}</b>Reytinq</div>
+        <div><b>${deliveries}</b>Çatdırma</div>
+        <div class="admin-only"><b>${money(balance)} AZN</b>Mövcud balans</div>
+      </div>
+      <div class="entity-sub admin-only">Komissiya: ${c.commissionrate ?? 0}% · Ümumi qazanc: ${money(c.totalEarnings||0)} AZN</div>
+      <div class="entity-foot">
+        <button class="btn-secondary" data-action="toggle-verify" data-id="${c.id}" style="flex:1;">${c.isVerified ? 'Təsdiqi ləğv et' : 'Təsdiqlə'}</button>
+        <button class="btn-secondary" data-action="edit-courier" data-id="${c.id}" style="flex:1;">Düzəliş et</button>
+      </div>
+      <div class="entity-foot">
+        <button class="btn-secondary" data-action="suspend-courier" data-id="${c.id}" style="flex:1;">Dayandır</button>
+        ${blocked
+          ? `<button class="btn-secondary" data-action="unblock-courier" data-id="${c.id}" style="flex:1;color:var(--success);">Blokdan çıxar</button>`
+          : `<button class="btn-ghost-danger" data-action="block-courier" data-id="${c.id}" style="flex:1;">⛔ Blokla</button>`}
+      </div>
+      <div class="entity-foot">
+        <button class="btn-ghost-danger admin-only" data-action="delete-courier" data-id="${c.id}" style="flex:1;">Sil</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('couriersEmpty').classList.toggle('hidden', filtered.length > 0);
+}
+
+document.getElementById('couriersGrid').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'toggle-verify') toggleCourierVerified(id);
+  if (btn.dataset.action === 'suspend-courier') suspendCourier(id);
+  if (btn.dataset.action === 'block-courier') blockCourier(id);
+  if (btn.dataset.action === 'unblock-courier') unblockCourier(id);
+  if (btn.dataset.action === 'delete-courier') deleteCourier(id);
+  if (btn.dataset.action === 'edit-courier') openCourierEditModal(id);
+});
+
+/* ============================================================
+   RENDER: RESTORANLAR
+   ============================================================ */
+async function toggleRestaurantActive(restaurantId) {
+  const r = state.restaurants.find(x => x.id === restaurantId);
+  if (!r) return;
+  try {
+    await updateDoc(doc(db, 'restaurants', restaurantId), { active: !r.active });
+    toast(!r.active ? 'Restoran aktivləşdirildi' : 'Restoran deaktiv edildi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Status dəyişdirilə bilmədi', 'error');
+  }
+}
+
+async function deleteRestaurant(restaurantId) {
+  if (!requireAdmin()) return;
+  if (!confirm('Restoranı Firestore bazasından silmək istədiyinizə əminsiniz? Diqqət: yalnız profil sənədini silir, Firebase Authentication hesabı Console-dan ayrıca silinməlidir.')) return;
+  try {
+    await deleteDoc(doc(db, 'restaurants', restaurantId));
+    toast('Restoran silindi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Restoranı silmək mümkün olmadı', 'error');
+  }
+}
+
+/* Restoranın hazırkı avtomatik açıq/bağlı statusunu iş saatlarına görə hesablayır. */
+function isRestaurantOpenNow(r) {
+  if (!r.autoHours || !r.openTime || !r.closeTime) return null; // avtomatik saat aktiv deyil
+  const now = new Date();
+  const [oh, om] = r.openTime.split(':').map(Number);
+  const [ch, cm] = r.closeTime.split(':').map(Number);
+  const nowMin = now.getHours() * 60 + now.getMinutes();
+  const openMin = oh * 60 + om;
+  const closeMin = ch * 60 + cm;
+  if (openMin === closeMin) return true; // 24 saat
+  if (openMin < closeMin) return nowMin >= openMin && nowMin < closeMin;
+  return nowMin >= openMin || nowMin < closeMin; // gecə yarısını keçən iş saatları
+}
+
+function renderRestaurants() {
+  const grid = document.getElementById('restaurantsGrid');
+  const filtered = state.restaurants.filter(r => matchesSearch([r.name, r.restaurantAddress, r.phone]));
+  grid.innerHTML = filtered.map(r => {
+    const balance = restaurantAvailableBalance(r.id, r.commission);
+    const orderCount = ordersCountForRestaurant(r.id);
+    const openNow = isRestaurantOpenNow(r);
+    const hoursLabel = r.openTime && r.closeTime ? `${r.openTime}–${r.closeTime}` : '';
+    return `
+    <div class="entity-card">
+      <div class="entity-top">
+        <span class="badge ${r.active?'success':'danger'} clickable" data-action="toggle-active" data-id="${r.id}">${r.active?'Aktiv':'Deaktiv'}</span>
+        ${r.isVerified === false ? '<span class="unverified-badge">Gözləyir</span>' : '<span class="verified-badge">✓ Təsdiqlənib</span>'}
+      </div>
+      ${openNow !== null ? `<div class="entity-top" style="margin-top:6px;"><span class="badge ${openNow ? 'success' : 'warning'}">${openNow ? '🟢 Açıqdır' : '🔒 Bağlıdır'}${hoursLabel ? ' · ' + hoursLabel : ''}</span></div>` : ''}
+      <h4>${esc(r.name)}${r.chain ? ` <span class="stat-pill">${esc(r.chain)}</span>` : ''}</h4>
+      <div class="entity-sub">${esc(r.restaurantAddress || '—')}<span class="admin-only"> · Komissiya ${r.commission ?? 0}%</span></div>
+      <div class="entity-stats">
+        <div><b>${orderCount}</b>Sifariş</div>
+        <div class="admin-only"><b>${money(balance)} AZN</b>Mövcud balans</div>
+        <div><b>${esc(r.phone || '—')}</b>Telefon</div>
+      </div>
+      <div class="entity-foot">
+        <button class="btn-secondary" data-action="open-products" data-id="${r.id}" style="flex:1;">Menyunu idarə et</button>
+        <button class="btn-secondary" data-action="edit-restaurant" data-id="${r.id}" style="flex:1;">Düzəliş et</button>
+      </div>
+      <div class="entity-foot">
+        <button class="btn-secondary" data-action="notify-restaurant" data-id="${r.id}" style="flex:1;">🔔 Bildiriş göndər</button>
+        <button class="btn-ghost-danger admin-only" data-action="delete-restaurant" data-id="${r.id}" style="flex:1;">Sil</button>
+      </div>
+    </div>`;
+  }).join('');
+  document.getElementById('restaurantsEmpty').classList.toggle('hidden', filtered.length > 0);
+}
+
+document.getElementById('restaurantsGrid').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'toggle-active') toggleRestaurantActive(id);
+  if (btn.dataset.action === 'delete-restaurant') deleteRestaurant(id);
+  if (btn.dataset.action === 'edit-restaurant') openRestaurantEditModal(id);
+  if (btn.dataset.action === 'open-products') openProductsModal(id);
+  if (btn.dataset.action === 'notify-restaurant') openNotifyRestaurantModal(id);
+});
+
+/* ============================================================
+   RESTORANA FƏRDİ BİLDİRİŞ GÖNDƏRMƏ
+   notifications kolleksiyasına restaurantId + audience:'restaurant'
+   ilə yazılır. Restoran tətbiqi (index594) bunu canlı dinləyib
+   zəng ikonu ilə göstərir.
+   ============================================================ */
+function populateNotifyRestaurantSelect(preselectId) {
+  const sel = document.getElementById('notifyRestaurantSelect');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Restoran seçin</option>' + state.restaurants
+    .map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
+  if (preselectId) sel.value = preselectId;
+}
+
+function openNotifyRestaurantModal(restaurantId) {
+  document.getElementById('notifyRestaurantForm').reset();
+  populateNotifyRestaurantSelect(restaurantId || '');
+  document.getElementById('notifyRestaurantModal').classList.remove('hidden');
+}
+
+document.getElementById('openNotifyRestaurantModalBtn').addEventListener('click', () => openNotifyRestaurantModal());
+
+document.getElementById('notifyRestaurantForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const restaurantId = document.getElementById('notifyRestaurantSelect').value;
+  const restaurant = state.restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) { toast('Restoran seçin', 'error'); return; }
+  const title = document.getElementById('notifyRestaurantTitle').value.trim();
+  const body = document.getElementById('notifyRestaurantBody').value.trim();
+  if (!title || !body) { toast('Başlıq və mətni doldurun', 'error'); return; }
+
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setLoading(submitBtn, true, 'Göndər');
+  try {
+    await addDoc(collection(db, 'notifications'), {
+      title,
+      body,
+      restaurantId: restaurant.id,
+      audience: 'restaurant',
+      createdAt: Date.now()
+    });
+    toast(`Bildiriş "${restaurant.name}" restoranına göndərildi`, 'success');
+    document.getElementById('notifyRestaurantModal').classList.add('hidden');
+    document.getElementById('notifyRestaurantForm').reset();
+  } catch (err) {
+    console.error(err);
+    toast('Bildiriş göndərilə bilmədi', 'error');
+  } finally {
+    setLoading(submitBtn, false, 'Göndər');
+  }
+});
+
+/* ============================================================
+   RENDER: İSTİFADƏÇİLƏR (customer app)
+   ============================================================ */
+async function deleteUser(userId) {
+  if (!requireAdmin()) return;
+  if (!confirm('İstifadəçini Firestore bazasından silmək istədiyinizə əminsiniz?')) return;
+  try {
+    await deleteDoc(doc(db, 'users', userId));
+    toast('İstifadəçi silindi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Silinmə mümkün olmadı', 'error');
+  }
+}
+
+function renderUsers() {
+  const body = document.getElementById('usersBody');
+  const filtered = state.users.filter(u => matchesSearch([u.name, u.surname, u.phone, u.email]));
+  body.innerHTML = filtered.map(u => `
+    <tr>
+      <td class="cell-user"><div class="mini-avatar">${esc((u.name||'?')[0])}</div>${esc(u.name || '')} ${esc(u.surname || '')}</td>
+      <td>${esc(u.phone || '—')}</td>
+      <td>${esc(u.email || '—')}</td>
+      <td>${esc(u.address || '—')}</td>
+      <td>${ordersCountForUser(u.id)}</td>
+      <td>
+        <div class="row-actions">
+          <button class="btn-ghost-danger admin-only" data-action="delete-user" data-id="${u.id}">Sil</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  document.getElementById('usersEmpty').classList.toggle('hidden', filtered.length > 0);
+}
+
+document.getElementById('usersBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  if (btn.dataset.action === 'delete-user') deleteUser(btn.dataset.id);
+});
+
+/* ============================================================
+   RENDER: ƏMƏLİYYATLAR / ÖDƏNİŞLƏR
+   ============================================================ */
+function methodLabel(t) {
+  if (!t.method) return '<span class="badge neutral">—</span>';
+  const isBank = t.method === 'bank';
+  const icon = isBank ? '🏦' : '💳';
+  const text = isBank ? 'Bank hesabı' : 'Kart';
+  const masked = t.detail ? esc(t.detail.slice(-4)).padStart(4, '•') : '';
+  return `<span class="badge neutral">${icon} ${text}${masked ? ' ····' + masked : ''}</span>`;
+}
+
+function renderTransactions() {
+  const body = document.getElementById('transactionsBody');
+  body.innerHTML = state.transactions.slice(0, 100).map(t => `
+    <tr>
+      <td>#TXN-${t.id.slice(0,6).toUpperCase()}</td>
+      <td>${esc(t.party)}</td>
+      <td>${esc(t.dateLabel)}</td>
+      <td><b>${money(t.amount)} AZN</b></td>
+      <td>${methodLabel(t)}</td>
+      <td><span class="badge ${t.status==='Ödənilib'?'success':'warning'}">${esc(t.status)}</span></td>
+    </tr>
+  `).join('');
+  document.getElementById('transactionsEmpty').classList.toggle('hidden', state.transactions.length > 0);
+
+  const delivered = state.orders.filter(o => o.status === 'delivered');
+  const revenue = delivered.reduce((s, o) => s + parseFloat(o.totalAmount || o.price || 0), 0);
+  const commission = delivered.reduce((s, o) => {
+    const rest = state.restaurants.find(r => r.id === o.restaurantId);
+    const rate = rest && rest.commission != null ? Number(rest.commission) : Number(state.settings.commission || 0);
+    return s + (parseFloat(o.totalAmount || o.price || 0) * rate / 100);
+  }, 0);
+  const courierPay = delivered.reduce((s, o) => s + parseFloat(o.courierFee || o.courierEarn || 0), 0);
+
+  document.getElementById('revenueValue').textContent = money(revenue) + " AZN";
+  document.getElementById('commissionValue').textContent = money(commission) + " AZN";
+  document.getElementById('courierPayValue').textContent = money(courierPay) + " AZN";
+}
+
+/* ============================================================
+   PUL ÇIXARMA SORĞULARI (kuryer/restoran özləri sorğu göndərir)
+   ============================================================ */
+function withdrawalPartyName(w) {
+  if (w.type === 'courier' || w.courierId) return w.courierName || 'Kuryer';
+  return w.restaurantName || 'Restoran';
+}
+function withdrawalTypeLabel(w) {
+  return (w.type === 'courier' || w.courierId) ? 'Kuryer' : 'Restoran';
+}
+
+function renderWithdrawals() {
+  const body = document.getElementById('withdrawalsBody');
+  if (!body) return;
+  const items = [...state.withdrawals].sort((a, b) => {
+    if ((a.status === 'pending') !== (b.status === 'pending')) return a.status === 'pending' ? -1 : 1;
+    return (b.createdAt || 0) - (a.createdAt || 0);
+  });
+
+  body.innerHTML = items.map(w => {
+    const statusBadge = w.status === 'approved' ? '<span class="badge success">Təsdiqləndi</span>'
+      : w.status === 'rejected' ? '<span class="badge danger">Rədd edildi</span>'
+      : '<span class="badge warning">Gözləyir</span>';
+    const actions = w.status === 'pending'
+      ? `<button class="btn-secondary" data-action="approve-withdrawal" data-id="${w.id}">Pul çıxar (Təsdiqlə)</button>
+         <button class="btn-ghost-danger" data-action="reject-withdrawal" data-id="${w.id}">Rədd et</button>`
+      : '—';
+    return `
+      <tr>
+        <td>${esc(withdrawalPartyName(w))}</td>
+        <td>${withdrawalTypeLabel(w)}</td>
+        <td><b>${money(w.amount)} AZN</b></td>
+        <td>${esc(w.card || '')}</td>
+        <td>${fmtDate(w.createdAt)}</td>
+        <td>${statusBadge}</td>
+        <td style="display:flex;gap:6px;flex-wrap:wrap;">${actions}</td>
+      </tr>`;
+  }).join('');
+  document.getElementById('withdrawalsEmpty').classList.toggle('hidden', items.length > 0);
+
+  const pending = state.withdrawals.filter(w => w.status === 'pending');
+  document.getElementById('withdrawalsPendingCount').textContent = pending.length;
+  document.getElementById('withdrawalsPendingAmount').textContent = money(pending.reduce((a, w) => a + Number(w.amount || 0), 0)) + ' AZN';
+
+  const now = new Date();
+  const approvedThisMonth = state.withdrawals.filter(w => {
+    if (w.status !== 'approved') return false;
+    const ts = w.processedAt;
+    if (!ts || !ts.toDate) return true;
+    const d = ts.toDate();
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  });
+  document.getElementById('withdrawalsApprovedAmount').textContent = money(approvedThisMonth.reduce((a, w) => a + Number(w.amount || 0), 0)) + ' AZN';
+}
+
+function updateWithdrawalsBadge() {
+  const badge = document.getElementById('withdrawalsActiveBadge');
+  if (!badge) return;
+  const pendingCount = state.withdrawals.filter(w => w.status === 'pending').length;
+  badge.textContent = pendingCount;
+  badge.classList.toggle('hidden', pendingCount === 0);
+}
+
+async function approveWithdrawal(id) {
+  const w = state.withdrawals.find(x => x.id === id);
+  if (!w) return;
+  if (!confirm(`${money(w.amount)} AZN — ${withdrawalPartyName(w)} tərəfinə köçürüldüyünü təsdiqləyirsiniz? Bu əməliyyat geri qaytarıla bilməz.`)) return;
+  try {
+    // DİQQƏT: walletBalance artıq sorğu göndərilən anda (courier tərəfində) azaldılıb
+    // ("bloklanıb") - ona görə TƏSDİQLƏNƏNDƏ balansı BİR DAHA azaltmırıq (əks halda
+    // məbləğ iki dəfə çıxılmış olardı). Təsdiq yalnız statusu və pul köçürməsinin
+    // faktiki edildiyini qeyd edir.
+    await updateDoc(doc(db, 'withdrawals', id), { status: 'approved', processedAt: serverTimestamp() });
+    await addDoc(collection(db, 'transactions'), {
+      party: `${withdrawalPartyName(w)} (${withdrawalTypeLabel(w).toLowerCase()})`,
+      amount: Number(w.amount || 0), status: 'Ödənilib', method: 'card', detail: w.card || '',
+      dateLabel: new Date().toLocaleDateString('az-AZ'), createdAt: serverTimestamp()
+    });
+    toast(`${money(w.amount)} AZN köçürüldü olaraq qeyd edildi`, 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Əməliyyat zamanı xəta baş verdi', 'error');
+  }
+}
+
+async function rejectWithdrawal(id) {
+  const w = state.withdrawals.find(x => x.id === id);
+  if (!w) return;
+  if (!confirm('Bu sorğunu rədd etmək istədiyinizə əminsiniz? Məbləğ istifadəçinin mövcud balansına qayıdacaq.')) return;
+  try {
+    // Sorğu göndərilən anda kuryerin walletBalance-ı artıq azaldılmışdı (bax: kuryer
+    // tətbiqində submitCourierWithdraw()) - rədd ediləndə həmin məbləği geri qaytarırıq
+    // ki, balans səhv "itməsin". QEYD: bu YALNIZ kuryer sorğularına aiddir - restoran
+    // balansı admin panelində fərqli (canlı hesablanan) üsulla idarə olunur, ona görə
+    // "restoran" tipli sorğular üçün buradan heç nə dəyişdirilmir (restoran panelinə
+    // baxılmayıb, ona görə oradakı sxemə toxunulmadı).
+    await updateDoc(doc(db, 'withdrawals', id), { status: 'rejected', processedAt: serverTimestamp() });
+    if ((w.type === 'courier' || w.courierId) && w.courierId) {
+      await updateDoc(doc(db, 'couriers', w.courierId), { walletBalance: increment(Number(w.amount || 0)) });
+    }
+    toast('Sorğu rədd edildi, məbləğ balansa qaytarıldı', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Əməliyyat zamanı xəta baş verdi', 'error');
+  }
+}
+
+document.getElementById('withdrawalsBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'approve-withdrawal') approveWithdrawal(id);
+  if (btn.dataset.action === 'reject-withdrawal') rejectWithdrawal(id);
+});
+
+/* ============================================================
+   KAMPANİYALAR
+   ============================================================ */
+function formatDateStr(s) { try { return new Date(s).toLocaleDateString('az-AZ'); } catch(e){ return s; } }
+
+function pushStatusBadge(c) {
+  if (!c.pushEnabled) return '';
+  const map = {
+    pending: ['warning', 'Push növbədə'],
+    sent: ['success', 'Push göndərildi'],
+    partial: ['warning', 'Push qismən göndərildi'],
+    failed: ['danger', 'Push uğursuz oldu']
+  };
+  const [cls, label] = map[c.pushStatus] || map.pending;
+  return `<span class="badge ${cls}" style="margin-top:6px;display:inline-block;">${label}</span>`;
+}
+
+function renderCampaignList(listId, emptyId, audience) {
+  const listEl = document.getElementById(listId);
+  const emptyEl = document.getElementById(emptyId);
+  const items = state.campaigns.filter(c => c.audience === audience).sort((a,b) => (b.createdAtMs||0) - (a.createdAtMs||0));
+  listEl.innerHTML = items.map(c => `
+    <div class="settings-row" style="padding:10px 4px;">
+      <div><h4 style="font-weight:600;">${esc(c.name)}</h4><p>${esc(c.description)}<br><small>${formatDateStr(c.startDate)} — ${formatDateStr(c.endDate)}</small></p>${pushStatusBadge(c)}</div>
+      <button class="btn-ghost-danger" data-action="delete-campaign" data-id="${c.id}">Sil</button>
+    </div>
+  `).join('');
+  emptyEl.classList.toggle('hidden', items.length > 0);
+}
+
+function renderCampaigns() {
+  renderCampaignList('campaignListCustomer', 'campaignEmptyCustomer', 'customer');
+  renderCampaignList('campaignListCourier', 'campaignEmptyCourier', 'courier');
+  renderCampaignList('campaignListRestaurant', 'campaignEmptyRestaurant', 'restaurant');
+}
+
+function updateFcmTokenCounts() {
+  const c1 = document.getElementById('fcmCustomerCount');
+  const c2 = document.getElementById('fcmCourierCount');
+  const c3 = document.getElementById('fcmRestaurantCount');
+  if (!c1 || !c2 || !c3) return;
+  c1.textContent = state.users.filter(u => u.fcmToken).length + ' / ' + state.users.length;
+  c2.textContent = state.couriers.filter(c => c.fcmToken).length + ' / ' + state.couriers.length;
+  c3.textContent = state.restaurants.filter(r => r.fcmToken).length + ' / ' + state.restaurants.length;
+}
+
+async function createCampaign(audience, fields, btn, originalText, sendPush) {
+  const { name, description, startDate, endDate } = fields;
+  if (!name || !description || !startDate || !endDate) { toast('Bütün xanaları doldurun', 'error'); return; }
+  if (new Date(endDate) < new Date(startDate)) { toast('Bitmə tarixi başlama tarixindən əvvəl ola bilməz', 'error'); return; }
+
+  setLoading(btn, true);
+  try {
+    const now = Date.now();
+    const title = `📢 ${name}`;
+    const body = `${description} (${formatDateStr(startDate)} — ${formatDateStr(endDate)})`;
+    const ref = await addDoc(collection(db, 'campaigns'), {
+      name, description, audience, startDate, endDate, pushEnabled: !!sendPush,
+      pushStatus: sendPush ? 'pending' : null,
+      createdAtMs: now, createdAt: serverTimestamp()
+    });
+    await addDoc(collection(db, 'notifications'), {
+      title, body, audience, campaignId: ref.id, createdAt: now
+    });
+    if (sendPush) {
+      await addDoc(collection(db, 'pushQueue'), {
+        title, body, audience, campaignId: ref.id, status: 'pending', createdAt: serverTimestamp()
+      });
+    }
+    const audienceLabel = audience === 'customer' ? 'istifadəçilərə' : (audience === 'courier' ? 'kuryerlərə' : 'restoranlara');
+    toast(`Kampaniya göndərildi — bütün ${audienceLabel} bildiriş getdi${sendPush ? ' (push növbəyə əlavə olundu)' : ''}`, 'success');
+    return true;
+  } catch (err) {
+    console.error(err);
+    toast('Kampaniya göndərilərkən xəta baş verdi', 'error');
+    return false;
+  } finally {
+    setLoading(btn, false, originalText);
+  }
+}
+
+async function deleteCampaign(id) {
+  if (!confirm('Bu kampaniyanı silmək istədiyinizə əminsiniz?')) return;
+  try {
+    await deleteDoc(doc(db, 'campaigns', id));
+    toast('Kampaniya silindi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Silinərkən xəta baş verdi', 'error');
+  }
+}
+
+document.getElementById('campCustomerPushSwitch').addEventListener('click', (e) => e.currentTarget.classList.toggle('on'));
+document.getElementById('campCourierPushSwitch').addEventListener('click', (e) => e.currentTarget.classList.toggle('on'));
+document.getElementById('campRestaurantPushSwitch').addEventListener('click', (e) => e.currentTarget.classList.toggle('on'));
+
+document.getElementById('campaignFormCustomer').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('campCustomerSubmitBtn');
+  const originalText = btn.innerHTML;
+  const sendPush = document.getElementById('campCustomerPushSwitch').classList.contains('on');
+  const ok = await createCampaign('customer', {
+    name: document.getElementById('campCustomerName').value.trim(),
+    description: document.getElementById('campCustomerDesc').value.trim(),
+    startDate: document.getElementById('campCustomerStart').value,
+    endDate: document.getElementById('campCustomerEnd').value
+  }, btn, originalText, sendPush);
+  if (ok) { e.target.reset(); document.getElementById('campCustomerPushSwitch').classList.add('on'); }
+});
+
+document.getElementById('campaignFormCourier').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('campCourierSubmitBtn');
+  const originalText = btn.innerHTML;
+  const sendPush = document.getElementById('campCourierPushSwitch').classList.contains('on');
+  const ok = await createCampaign('courier', {
+    name: document.getElementById('campCourierName').value.trim(),
+    description: document.getElementById('campCourierDesc').value.trim(),
+    startDate: document.getElementById('campCourierStart').value,
+    endDate: document.getElementById('campCourierEnd').value
+  }, btn, originalText, sendPush);
+  if (ok) { e.target.reset(); document.getElementById('campCourierPushSwitch').classList.add('on'); }
+});
+
+document.getElementById('campaignFormRestaurant').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('campRestaurantSubmitBtn');
+  const originalText = btn.innerHTML;
+  const sendPush = document.getElementById('campRestaurantPushSwitch').classList.contains('on');
+  const ok = await createCampaign('restaurant', {
+    name: document.getElementById('campRestaurantName').value.trim(),
+    description: document.getElementById('campRestaurantDesc').value.trim(),
+    startDate: document.getElementById('campRestaurantStart').value,
+    endDate: document.getElementById('campRestaurantEnd').value
+  }, btn, originalText, sendPush);
+  if (ok) { e.target.reset(); document.getElementById('campRestaurantPushSwitch').classList.add('on'); }
+});
+
+document.getElementById('campaignListCustomer').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action="delete-campaign"]');
+  if (btn) deleteCampaign(btn.dataset.id);
+});
+document.getElementById('campaignListCourier').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action="delete-campaign"]');
+  if (btn) deleteCampaign(btn.dataset.id);
+});
+document.getElementById('campaignListRestaurant').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action="delete-campaign"]');
+  if (btn) deleteCampaign(btn.dataset.id);
+});
+
+/* ============================================================
+   RƏYLƏR (məhsul rəyləri — customer app-dan)
+   ============================================================ */
+function renderReviews() {
+  const list = document.getElementById('reviewsList');
+  const items = [...state.reviews].sort((a, b) => {
+    const ta = a.createdAt?.seconds ? a.createdAt.seconds * 1000 : (a.createdAt instanceof Date ? a.createdAt.getTime() : 0);
+    const tb = b.createdAt?.seconds ? b.createdAt.seconds * 1000 : (b.createdAt instanceof Date ? b.createdAt.getTime() : 0);
+    return tb - ta;
+  });
+  list.innerHTML = items.map(r => `
+    <div class="campaign-item">
+      <div class="campaign-item-top">
+        <div>
+          <h4>${esc(r.productName || 'Məhsul')}</h4>
+          <div style="color:#FFB020;letter-spacing:1px;margin-top:4px;">${'★'.repeat(r.stars||0)}${'☆'.repeat(5-(r.stars||0))}</div>
+        </div>
+        <button class="btn-ghost-danger admin-only" data-action="delete-review" data-id="${r.id}">Sil</button>
+      </div>
+      <p>${esc(r.text || '(şərh yazılmayıb)')}</p>
+      <div class="campaign-dates">${esc(r.userName || 'İstifadəçi')}</div>
+    </div>
+  `).join('');
+  document.getElementById('reviewsEmpty').classList.toggle('hidden', items.length > 0);
+
+  const total = state.reviews.length;
+  const avg = total ? (state.reviews.reduce((s, r) => s + (r.stars || 0), 0) / total) : 0;
+  const low = state.reviews.filter(r => (r.stars || 0) <= 2).length;
+  document.getElementById('reviewsTotalCount').textContent = total;
+  document.getElementById('reviewsAvgRating').textContent = avg.toFixed(1) + ' ★';
+  document.getElementById('reviewsLowCount').textContent = low;
+  const badge = document.getElementById('reviewsCountBadge');
+  badge.textContent = total;
+  badge.classList.toggle('hidden', total === 0);
+}
+
+async function deleteReview(id) {
+  if (!requireAdmin()) return;
+  if (!confirm('Bu rəyi silmək istəyirsiniz?')) return;
+  try {
+    await deleteDoc(doc(db, 'reviews', id));
+    toast('Rəy silindi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Silinmə mümkün olmadı', 'error');
+  }
+}
+
+document.getElementById('reviewsList').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action="delete-review"]');
+  if (btn) deleteReview(btn.dataset.id);
+});
+
+/* ============================================================
+   PROMO KODLAR / ENDİRİM KUPONLARI
+   promoCodes kolleksiyası: { code, discountType('percent'|'fixed'),
+   discountValue, minOrderAmount, maxUses, usedCount, expiryDate(ISO),
+   active, createdAt }
+   ============================================================ */
+function promoStatusInfo(p) {
+  const now = new Date();
+  const expiry = p.expiryDate ? new Date(p.expiryDate + 'T23:59:59') : null;
+  const expired = expiry ? now > expiry : false;
+  const usedUp = p.maxUses ? (p.usedCount || 0) >= p.maxUses : false;
+  if (expired) return { label: 'Vaxtı bitib', cls: 'danger' };
+  if (usedUp) return { label: 'Limit dolub', cls: 'danger' };
+  if (!p.active) return { label: 'Deaktiv', cls: 'warning' };
+  return { label: 'Aktiv', cls: 'success' };
+}
+
+function renderPromoCodes() {
+  const body = document.getElementById('promoBody');
+  const items = [...state.promoCodes].sort((a, b) => (b.createdAt||0) - (a.createdAt||0));
+  body.innerHTML = items.map(p => {
+    const status = promoStatusInfo(p);
+    const discountLabel = p.discountType === 'fixed' ? `${money(p.discountValue)} AZN` : `${p.discountValue}%`;
+    const usesLabel = p.maxUses ? `${p.usedCount||0} / ${p.maxUses}` : `${p.usedCount||0} / ∞`;
+    return `<tr>
+      <td><b>${esc(p.code)}</b></td>
+      <td>${discountLabel}</td>
+      <td>${money(p.minOrderAmount||0)} AZN</td>
+      <td>${usesLabel}</td>
+      <td>${p.expiryDate || '—'}</td>
+      <td><span class="badge ${status.cls}">${status.label}</span></td>
+      <td>
+        <div class="row-actions">
+          <button class="btn-secondary" data-action="toggle-promo" data-id="${p.id}">${p.active ? 'Deaktiv et' : 'Aktivləşdir'}</button>
+          <button class="btn-ghost-danger" data-action="delete-promo" data-id="${p.id}">Sil</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  document.getElementById('promoEmpty').classList.toggle('hidden', items.length > 0);
+
+  const activeCount = state.promoCodes.filter(p => promoStatusInfo(p).label === 'Aktiv').length;
+  const usedTotal = state.promoCodes.reduce((s, p) => s + (p.usedCount || 0), 0);
+  const expiredCount = state.promoCodes.filter(p => promoStatusInfo(p).label === 'Vaxtı bitib').length;
+  document.getElementById('promoActiveCount').textContent = activeCount;
+  document.getElementById('promoUsedCount').textContent = usedTotal;
+  document.getElementById('promoExpiredCount').textContent = expiredCount;
+  const navBadge = document.getElementById('promoActiveBadge');
+  navBadge.textContent = activeCount;
+  navBadge.classList.toggle('hidden', activeCount === 0);
+}
+
+async function togglePromoActive(id) {
+  const p = state.promoCodes.find(x => x.id === id);
+  if (!p) return;
+  try {
+    await updateDoc(doc(db, 'promoCodes', id), { active: !p.active });
+    toast(!p.active ? 'Promo kod aktivləşdirildi' : 'Promo kod deaktiv edildi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Status dəyişdirilə bilmədi', 'error');
+  }
+}
+
+async function deletePromoCode(id) {
+  if (!confirm('Bu promo kodu silmək istədiyinizə əminsiniz?')) return;
+  try {
+    await deleteDoc(doc(db, 'promoCodes', id));
+    toast('Promo kod silindi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Promo kodu silmək mümkün olmadı', 'error');
+  }
+}
+
+document.getElementById('promoBody').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action]');
+  if (!btn) return;
+  const id = btn.dataset.id;
+  if (btn.dataset.action === 'toggle-promo') togglePromoActive(id);
+  if (btn.dataset.action === 'delete-promo') deletePromoCode(id);
+});
+
+document.getElementById('openNewPromoModalBtn').addEventListener('click', () => {
+  document.getElementById('promoForm').reset();
+  document.getElementById('promoActiveSwitch').classList.add('on');
+  document.getElementById('promoModal').classList.remove('hidden');
+});
+
+document.getElementById('promoActiveSwitch').addEventListener('click', (e) => {
+  e.currentTarget.classList.toggle('on');
+});
+
+document.getElementById('promoForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const code = document.getElementById('promoCode').value.trim().toUpperCase();
+  const discountType = document.getElementById('promoDiscountType').value;
+  const discountValue = parseFloat(document.getElementById('promoDiscountValue').value) || 0;
+  const minOrderAmount = parseFloat(document.getElementById('promoMinOrder').value) || 0;
+  const maxUsesRaw = document.getElementById('promoMaxUses').value;
+  const maxUses = maxUsesRaw ? parseInt(maxUsesRaw) : null;
+  const expiryDate = document.getElementById('promoExpiry').value;
+  const active = document.getElementById('promoActiveSwitch').classList.contains('on');
+
+  if (!code) { toast('Promo kod daxil edin', 'error'); return; }
+  if (state.promoCodes.some(p => p.code === code)) { toast('Bu kod artıq mövcuddur', 'error'); return; }
+
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setLoading(submitBtn, true, 'Yarat');
+  try {
+    await addDoc(collection(db, 'promoCodes'), {
+      code, discountType, discountValue, minOrderAmount,
+      maxUses, usedCount: 0, expiryDate, active,
+      createdAt: Date.now()
+    });
+    toast('Promo kod yaradıldı', 'success');
+    document.getElementById('promoModal').classList.add('hidden');
+    document.getElementById('promoForm').reset();
+  } catch (err) {
+    console.error(err);
+    toast('Promo kod yaradıla bilmədi', 'error');
+  } finally {
+    setLoading(submitBtn, false, 'Yarat');
+  }
+});
+
+/* ============================================================
+   AUTENTİKASİYA MƏNTİQİ & EKRAN KEÇİDLƏRİ
+   ============================================================ */
+document.getElementById('loginForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errBox = document.getElementById('loginError');
+  const submitBtn = document.getElementById('loginSubmitBtn');
+  const originalText = 'Daxil ol';
+
+  errBox.classList.remove('show');
+  setLoading(submitBtn, true, originalText);
+
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+    toast("Sistemə giriş edildi", "success");
+  } catch (err) {
+    errBox.textContent = "Xəta: " + (err.code === 'auth/invalid-credential' ? 'E-poçt və ya şifrə yanlışdır' : err.message);
+    errBox.classList.add('show');
+  } finally {
+    setLoading(submitBtn, false, originalText);
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  teardownRealtime();
+  signOut(auth).then(() => toast('Hesabdan çıxıldı', 'info'));
+});
+
+/* ============================================================
+   ROL SİSTEMİ
+   ============================================================ */
+let currentUserRole = null;
+function requireAdmin() {
+  if (currentUserRole !== 'admin') { toast('Bu əməliyyat yalnız administrator üçündür', 'error'); return false; }
+  return true;
+}
+const ALL_NAV_PAGES = ['dashboard','orders','courier','restaurant','map','users','campaigns','promocodes','reviews','payments','settings','withdrawals'];
+const ROLE_PERMISSIONS = {
+  admin: { all: true },
+  operator: { all: false, pages: ['dashboard', 'orders', 'courier', 'restaurant', 'map', 'users', 'reviews'] }
+};
+function canAccess(role) {
+  const perms = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.operator;
+  return perms.all === true;
+}
+function pageAllowedForRole(pageId, role) {
+  const perms = ROLE_PERMISSIONS[role] || ROLE_PERMISSIONS.operator;
+  if (perms.all) return true;
+  return (perms.pages || []).includes(pageId);
+}
+async function ensureAdminProfile(user) {
+  const ref = doc(db, 'admins', user.uid);
+  const snap = await getDoc(ref);
+  if (!snap.exists()) {
+    await setDoc(ref, { email: user.email, role: 'admin', active: true, createdAt: serverTimestamp() });
+    return { role: 'admin', active: true };
+  }
+  const data = snap.data();
+  return { role: data.role || 'admin', active: data.active !== false };
+}
+function applyRoleToUi(role, user) {
+  const roleLabels = { admin: 'Administrator', operator: 'Operator' };
+  document.getElementById('profileEmail').textContent = roleLabels[role] || 'BakuGo Operator';
+  document.getElementById('settingsAdminEmail').textContent = user.email || '—';
+  document.getElementById('settingsAdminRole').textContent = roleLabels[role] || role;
+  ALL_NAV_PAGES.forEach(pageId => {
+    const btn = document.getElementById('nav-' + pageId);
+    if (!btn) return;
+    btn.classList.toggle('hidden', !pageAllowedForRole(pageId, role));
+  });
+  document.getElementById('adminManagementBox').classList.toggle('hidden', role !== 'admin');
+  document.body.classList.toggle('role-operator', role !== 'admin');
+}
+
+/* ============================================================
+   ADMİN İDARƏETMƏSİ (sub-admin / operator hesabları)
+   ============================================================ */
+function renderAdminsTable() {
+  const body = document.getElementById('adminsBody');
+  if (!body) return;
+  const roleLabels = { admin: 'Administrator', operator: 'Operator' };
+  body.innerHTML = state.admins.map(a => `
+    <tr>
+      <td>${esc(a.email || '—')}</td>
+      <td>
+        <select class="admin-role-select" data-id="${a.id}" ${a.id === auth.currentUser?.uid ? 'disabled' : ''}>
+          <option value="operator" ${a.role === 'operator' ? 'selected' : ''}>Operator</option>
+          <option value="admin" ${a.role !== 'operator' ? 'selected' : ''}>Administrator</option>
+        </select>
+      </td>
+      <td><span class="badge ${a.active === false ? 'danger' : 'success'}">${a.active === false ? 'Deaktiv' : 'Aktiv'}</span></td>
+      <td>
+        <div class="row-actions">
+          <button class="btn-ghost-danger" data-action="toggle-admin" data-id="${a.id}" ${a.id === auth.currentUser?.uid ? 'disabled' : ''}>${a.active === false ? 'Aktiv et' : 'Deaktiv et'}</button>
+        </div>
+      </td>
+    </tr>
+  `).join('');
+  document.getElementById('adminsEmpty').classList.toggle('hidden', state.admins.length > 0);
+}
+
+document.getElementById('adminsBody').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-action="toggle-admin"]');
+  if (!btn) return;
+  const a = state.admins.find(x => x.id === btn.dataset.id);
+  if (!a) return;
+  try {
+    await updateDoc(doc(db, 'admins', a.id), { active: a.active === false });
+    toast(a.active === false ? 'Hesab aktiv edildi' : 'Hesab deaktiv edildi', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Status dəyişdirilə bilmədi', 'error');
+  }
+});
+
+document.getElementById('adminsBody').addEventListener('change', async (e) => {
+  const sel = e.target.closest('.admin-role-select');
+  if (!sel) return;
+  try {
+    await updateDoc(doc(db, 'admins', sel.dataset.id), { role: sel.value });
+    toast('Rol yeniləndi', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Rol yenilənə bilmədi', 'error');
+  }
+});
+
+document.getElementById('openNewAdminModalBtn').addEventListener('click', () => {
+  document.getElementById('adminForm').reset();
+  document.getElementById('adminModal').classList.remove('hidden');
+});
+
+document.getElementById('adminForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const email = document.getElementById('adminEmail').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  const role = document.getElementById('adminRoleSelect').value;
+  const btn = document.getElementById('adminFormSubmitBtn');
+  setLoading(btn, true, 'Yarat');
+  try {
+    const uid = await createAuthAccountSilently(email, password);
+    await setDoc(doc(db, 'admins', uid), { email, role, active: true, createdAt: serverTimestamp() });
+    toast('Yeni admin hesabı yaradıldı', 'success');
+    document.getElementById('adminModal').classList.add('hidden');
+    document.getElementById('adminForm').reset();
+  } catch (err) {
+    console.error(err);
+    let msg = 'Hesab yaradıla bilmədi';
+    if (err.code === 'auth/email-already-in-use') msg = 'Bu e-poçt artıq istifadə olunur';
+    else if (err.code === 'auth/weak-password') msg = 'Şifrə ən azı 6 simvol olmalıdır';
+    toast(msg, 'error');
+  } finally {
+    setLoading(btn, false, 'Yarat');
+  }
+});
+
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    let profile;
+    try {
+      profile = await ensureAdminProfile(user);
+    } catch (err) {
+      console.error('Rol yüklənə bilmədi', err);
+      toast('Rol oxunmadı: ' + (err.code || err.message), 'error');
+      profile = { role: 'admin', active: true };
+    }
+    if (!profile.active) {
+      toast('Bu hesab deaktiv edilib — admin ilə əlaqə saxlayın', 'error');
+      teardownRealtime();
+      await signOut(auth);
+      return;
+    }
+    currentUserRole = profile.role;
+
+    document.getElementById('loginScreen').classList.add('hidden');
+    document.getElementById('appShell').classList.remove('hidden');
+    const name = user.email ? user.email.split('@')[0] : 'Admin';
+    const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+    document.getElementById('profileName').textContent = displayName;
+    document.getElementById('profileAvatar').textContent = displayName.charAt(0).toUpperCase();
+    document.getElementById('welcomeName').textContent = ', ' + displayName;
+
+    applyRoleToUi(currentUserRole, user);
+    bootstrapData();
+  } else {
+    document.getElementById('appShell').classList.add('hidden');
+    document.getElementById('loginScreen').classList.remove('hidden');
+    currentUserRole = null;
+    document.body.classList.remove('role-operator');
+    teardownRealtime();
+  }
+});
+
+/* ============================================================
+   SƏHİFƏLƏRİN NAVİQASİYASI
+   ============================================================ */
+function showPage(pageId, btnEl) {
+  if (!pageAllowedForRole(pageId, currentUserRole)) { toast('Bu bölməyə girişiniz yoxdur', 'error'); return; }
+  document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
+  document.getElementById(pageId).classList.remove('hidden');
+  document.querySelectorAll('.menu button').forEach(b => b.classList.remove('active'));
+  if (btnEl) btnEl.classList.add('active');
+  sidebar.classList.remove('open');
+  sidebarOverlay.classList.remove('show');
+  if (pageId === 'map') {
+    setTimeout(() => { ensureMapInitialized(); }, 100);
+  }
+}
+document.getElementById('nav-dashboard').addEventListener('click', (e) => showPage('dashboard', e.currentTarget));
+document.getElementById('nav-orders').addEventListener('click', (e) => showPage('orders', e.currentTarget));
+document.getElementById('seeAllOrdersBtn').addEventListener('click', () => showPage('orders', document.getElementById('nav-orders')));
+document.getElementById('nav-courier').addEventListener('click', (e) => showPage('courier', e.currentTarget));
+document.getElementById('nav-restaurant').addEventListener('click', (e) => showPage('restaurant', e.currentTarget));
+document.getElementById('nav-map').addEventListener('click', (e) => showPage('map', e.currentTarget));
+document.getElementById('nav-users').addEventListener('click', (e) => showPage('users', e.currentTarget));
+document.getElementById('nav-campaigns').addEventListener('click', (e) => showPage('campaigns', e.currentTarget));
+document.getElementById('nav-promocodes').addEventListener('click', (e) => showPage('promocodes', e.currentTarget));
+document.getElementById('nav-reviews').addEventListener('click', (e) => showPage('reviews', e.currentTarget));
+document.getElementById('nav-payments').addEventListener('click', (e) => showPage('payments', e.currentTarget));
+document.getElementById('nav-settings').addEventListener('click', (e) => showPage('settings', e.currentTarget));
+document.getElementById('nav-withdrawals').addEventListener('click', (e) => showPage('withdrawals', e.currentTarget));
+
+/* ============================================================
+   AXTARIŞ
+   ============================================================ */
+const handleSearch = debounce((e) => {
+  searchTerm = e.target.value.trim().toLowerCase();
+  renderOrders(); renderCouriers(); renderRestaurants(); renderUsers();
+}, 250);
+document.getElementById('globalSearch').addEventListener('input', handleSearch);
+
+/* ============================================================
+   HƏFTƏLİK QRAFİK
+   ============================================================ */
+function renderAdvancedCharts() {
+  const labels = [];
+  const orderCounts = [];
+  const revenueCounts = [];
+  for (let i = 6; i >= 0; i--) {
+    const day = new Date(); day.setHours(0,0,0,0); day.setDate(day.getDate() - i);
+    const nextDay = new Date(day); nextDay.setDate(day.getDate() + 1);
+    labels.push(day.toLocaleDateString('az-AZ', { weekday: 'short' }));
+    const dayOrders = state.orders.filter(o => {
+      const d = tsToDate(o.createdAt);
+      return d && d >= day && d < nextDay;
+    });
+    orderCounts.push(dayOrders.length);
+    revenueCounts.push(dayOrders.filter(o => o.status === 'delivered').reduce((s,o)=>s+parseFloat(o.totalAmount||o.price||0),0));
+  }
+
+  const canvas = document.getElementById('weeklyChartCanvas');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  if (myChartInstance) myChartInstance.destroy();
+
+  myChartInstance = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [
+        { label: 'Sifariş sayı', data: orderCounts, borderColor: '#FF5722', backgroundColor: 'rgba(255,87,34,.1)', borderWidth: 3, tension: .4, fill: true, pointBackgroundColor: '#12141C', pointRadius: 4, yAxisID: 'y' },
+        { label: 'Gəlir (AZN)', data: revenueCounts, borderColor: '#16A34A', backgroundColor: 'rgba(22,163,74,.06)', borderWidth: 2, tension: .4, fill: false, pointBackgroundColor: '#16A34A', pointRadius: 3, yAxisID: 'y1' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: true } },
+      scales: {
+        y: { beginAtZero: true, grid: { color: '#E7E9F0' }, position: 'left' },
+        y1: { beginAtZero: true, position: 'right', grid: { display: false } }
+      }
+    }
+  });
+}
+
+/* ============================================================
+   CSV İXRACI
+   ============================================================ */
+function exportToCsv(filenamePrefix, header, rows) {
+  const csvContent = [header, ...rows]
+    .map(row => row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
+    .join('\r\n');
+  const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${filenamePrefix}-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  toast('CSV faylı yükləndi', 'success');
+}
+
+document.getElementById('exportCsvBtn').addEventListener('click', () => {
+  if (state.orders.length === 0) { toast('İxrac ediləcək sifariş yoxdur', 'error'); return; }
+  const header = ['ID', 'Müştəri', 'Telefon', 'Restoran', 'Status', 'Məbləğ (AZN)', 'Tarix'];
+  const rows = state.orders.map(o => [
+    o.id, o.customerName || '', o.customerPhone || '', o.restaurantName || '', o.status || '', money(o.totalAmount||o.price), fmtDate(o.createdAt)
+  ]);
+  exportToCsv('bakugo-siparisler', header, rows);
+});
+
+document.getElementById('exportUsersCsvBtn')?.addEventListener('click', () => {
+  if (state.users.length === 0) { toast('İxrac ediləcək istifadəçi yoxdur', 'error'); return; }
+  const header = ['ID', 'Ad', 'Soyad', 'Telefon', 'E-poçt', 'Ünvan', 'Sifariş sayı'];
+  const rows = state.users.map(u => [
+    u.id, u.name || '', u.surname || '', u.phone || '', u.email || '', u.address || '', ordersCountForUser(u.id)
+  ]);
+  exportToCsv('bakugo-istifadeciler', header, rows);
+});
+
+document.getElementById('exportTxnCsvBtn')?.addEventListener('click', () => {
+  if (state.transactions.length === 0) { toast('İxrac ediləcək əməliyyat yoxdur', 'error'); return; }
+  const header = ['ID', 'Tərəf', 'Tarix', 'Məbləğ (AZN)', 'Üsul', 'Status'];
+  const rows = state.transactions.map(t => [
+    t.id, t.party || '', t.dateLabel || '', money(t.amount), t.method === 'bank' ? 'Bank hesabı' : 'Kart', t.status || ''
+  ]);
+  exportToCsv('bakugo-odenisler', header, rows);
+});
+
+/* ============================================================
+   PARAMETRLƏR SƏHİFƏSİ
+   ============================================================ */
+document.getElementById('saveSettingsBtn').addEventListener('click', async (e) => {
+  const btn = e.currentTarget;
+  setLoading(btn, true, 'Yadda saxla');
+  const commission = parseFloat(document.getElementById('settingCommission').value) || 0;
+  const courierFee = parseFloat(document.getElementById('settingCourierFee').value) || 0;
+  const minOrder = parseFloat(document.getElementById('settingMinOrder').value) || 0;
+  state.settings.commission = commission;
+  state.settings.courierFee = courierFee;
+  state.settings.minOrder = minOrder;
+  try {
+    await setDoc(doc(db, 'settings', 'main'), state.settings, { merge: true });
+    applySettingsToUi();
+    renderTransactions();
+    toast('Parametrlər yadda saxlanıldı', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Parametrləri saxlamaq mümkün olmadı', 'error');
+  } finally {
+    setLoading(btn, false, 'Yadda saxla');
+  }
+});
+
+document.getElementById('notifNewOrder').addEventListener('click', async (e) => {
+  const isOn = !e.currentTarget.classList.contains('on');
+  e.currentTarget.classList.toggle('on', isOn);
+  state.settings.notifyOnAssign = isOn;
+  try {
+    await setDoc(doc(db, 'settings', 'main'), { notifyOnAssign: isOn }, { merge: true });
+  } catch (err) { console.error(err); }
+});
+
+document.getElementById('refreshBtn').addEventListener('click', () => {
+  toast('Məlumatlar yeniləndi', 'success');
+});
+
+window.addEventListener('beforeunload', () => { teardownRealtime(); });
+
+/* ============================================================
+   YENİ KURYER YARATMA (real Firebase Auth hesabı)
+   ============================================================ */
+let editingCourierId = null;
+
+document.getElementById('openNewCourierModalBtn').addEventListener('click', () => {
+  editingCourierId = null;
+  document.getElementById('courierModalTitle').textContent = 'Yeni kuryer';
+  document.getElementById('courierForm').reset();
+  document.getElementById('courierAuthFields').classList.remove('hidden');
+  document.getElementById('courierEmail').required = true;
+  document.getElementById('courierPassword').required = true;
+  document.getElementById('courierVerifiedSwitch').classList.add('on');
+  document.getElementById('courierFormSubmitBtn').textContent = 'Əlavə et';
+  document.getElementById('courierModal').classList.remove('hidden');
+});
+
+function openCourierEditModal(id) {
+  const c = state.couriers.find(x => x.id === id);
+  if (!c) return;
+  editingCourierId = id;
+  document.getElementById('courierModalTitle').textContent = 'Kuryeri redaktə et';
+  document.getElementById('courierForm').reset();
+  document.getElementById('courierAuthFields').classList.add('hidden');
+  document.getElementById('courierEmail').required = false;
+  document.getElementById('courierPassword').required = false;
+  document.getElementById('courierName').value = c.name || '';
+  document.getElementById('courierSurname').value = c.surname || '';
+  document.getElementById('courierPhone').value = c.phone || '';
+  document.getElementById('courierZone').value = c.workingZone || c.activeCity || '';
+  document.getElementById('courierCommission').value = c.commissionrate ?? 0;
+  document.getElementById('courierRating').value = c.rating ?? 0;
+  document.getElementById('courierVerifiedSwitch').classList.toggle('on', !!c.isVerified);
+  document.getElementById('courierFormSubmitBtn').textContent = 'Yadda saxla';
+  document.getElementById('courierModal').classList.remove('hidden');
+}
+
+document.getElementById('courierVerifiedSwitch').addEventListener('click', (e) => {
+  e.currentTarget.classList.toggle('on');
+});
+
+document.getElementById('courierForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('courierFormSubmitBtn');
+  const originalText = btn.textContent;
+  setLoading(btn, true, originalText);
+
+  const name = document.getElementById('courierName').value.trim();
+  const surname = document.getElementById('courierSurname').value.trim();
+  const phone = document.getElementById('courierPhone').value.trim();
+  const workingZone = document.getElementById('courierZone').value.trim() || 'Merkez';
+  const commissionrate = parseFloat(document.getElementById('courierCommission').value) || 0;
+  const isVerified = document.getElementById('courierVerifiedSwitch').classList.contains('on') ? 1 : 0;
+  const ratingRaw = document.getElementById('courierRating').value;
+  const rating = ratingRaw !== '' ? Math.max(0, Math.min(5, parseFloat(ratingRaw))) : null;
+
+  try {
+    if (editingCourierId) {
+      const updatePayload = { name, surname, phone, workingZone, isVerified };
+      if (currentUserRole === 'admin') updatePayload.commissionrate = commissionrate;
+      if (rating !== null) updatePayload.rating = rating;
+      await updateDoc(doc(db, 'couriers', editingCourierId), updatePayload);
+      toast('Kuryer məlumatları yeniləndi', 'success');
+    } else {
+      const email = document.getElementById('courierEmail').value.trim();
+      const password = document.getElementById('courierPassword').value;
+      if (!requireAdmin()) return;
+      const uid = await createAuthAccountSilently(email, password);
+      await setDoc(doc(db, 'couriers', uid), {
+        name, surname, phone, email, workingZone, commissionrate, isVerified,
+        role: 'courier', status: 'offline', isAvailable: false,
+        walletBalance: 0, totalDeliveries: 0, totalEarnings: 0, totalReviews: 0, rating: 0,
+        currentOrderId: '', lat: '', lng: '', activeCity: '', profileImageUrl: '',
+        joinedDate: serverTimestamp(), lastSeen: serverTimestamp()
+      });
+      toast('Yeni kuryer hesabı yaradıldı — indi Kuryer tətbiqinə daxil ola bilər', 'success');
+    }
+    document.getElementById('courierModal').classList.add('hidden');
+    document.getElementById('courierForm').reset();
+  } catch (err) {
+    console.error(err);
+    let msg = 'Xəta baş verdi';
+    if (err.code === 'auth/email-already-in-use') msg = 'Bu e-poçt artıq istifadə olunub';
+    else if (err.code === 'auth/weak-password') msg = 'Şifrə ən azı 6 simvol olmalıdır';
+    else if (err.code === 'auth/invalid-email') msg = 'E-poçt formatı yanlışdır';
+    toast(msg, 'error');
+  } finally {
+    setLoading(btn, false, originalText);
+  }
+});
+
+/* ============================================================
+   YENİ RESTORAN YARATMA (real Firebase Auth hesabı + xəritə seçimi)
+   ============================================================ */
+let editingRestaurantId = null;
+let restaurantMiniMapInstance = null;
+let restaurantMiniMarker = null;
+
+function initRestaurantMiniMap(lat, lng) {
+  const mapEl = document.getElementById('restaurantMiniMap');
+  if (restaurantMiniMapInstance) {
+    restaurantMiniMapInstance.remove();
+    restaurantMiniMapInstance = null;
+  }
+  restaurantMiniMapInstance = L.map(mapEl, { attributionControl: false }).setView([lat, lng], 14);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(restaurantMiniMapInstance);
+  restaurantMiniMarker = L.marker([lat, lng], { draggable: true }).addTo(restaurantMiniMapInstance);
+  restaurantMiniMarker.on('dragend', () => {
+    const pos = restaurantMiniMarker.getLatLng();
+    document.getElementById('restaurantLatInput').value = pos.lat;
+    document.getElementById('restaurantLngInput').value = pos.lng;
+  });
+  restaurantMiniMapInstance.on('click', (e) => {
+    restaurantMiniMarker.setLatLng(e.latlng);
+    document.getElementById('restaurantLatInput').value = e.latlng.lat;
+    document.getElementById('restaurantLngInput').value = e.latlng.lng;
+  });
+  document.getElementById('restaurantLatInput').value = lat;
+  document.getElementById('restaurantLngInput').value = lng;
+  setTimeout(() => restaurantMiniMapInstance.invalidateSize(), 200);
+}
+
+document.getElementById('restaurantAddressSearchBtn').addEventListener('click', async () => {
+  const q = document.getElementById('restaurantAddressSearch').value.trim();
+  if (!q) return;
+  const btn = document.getElementById('restaurantAddressSearchBtn');
+  setLoading(btn, true, 'Axtar');
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=az&q=${encodeURIComponent(q)}`);
+    const results = await res.json();
+    if (results && results.length > 0) {
+      const lat = parseFloat(results[0].lat);
+      const lng = parseFloat(results[0].lon);
+      restaurantMiniMapInstance.setView([lat, lng], 15);
+      restaurantMiniMarker.setLatLng([lat, lng]);
+      document.getElementById('restaurantLatInput').value = lat;
+      document.getElementById('restaurantLngInput').value = lng;
+      if (!document.getElementById('restaurantAddressText').value) {
+        document.getElementById('restaurantAddressText').value = results[0].display_name;
+      }
+      toast('Ünvan xəritədə tapıldı', 'success');
+    } else {
+      toast('Ünvan tapılmadı, xəritədən əl ilə seçin', 'error');
+    }
+  } catch (err) {
+    console.error(err);
+    toast('Axtarış zamanı xəta baş verdi', 'error');
+  } finally {
+    setLoading(btn, false, 'Axtar');
+  }
+});
+
+document.getElementById('openNewRestaurantModalBtn').addEventListener('click', () => {
+  editingRestaurantId = null;
+  document.getElementById('restaurantModalTitle').textContent = 'Yeni restoran';
+  document.getElementById('restaurantForm').reset();
+  document.getElementById('restaurantAuthFields').classList.remove('hidden');
+  document.getElementById('restaurantEmail').required = true;
+  document.getElementById('restaurantPassword').required = true;
+  document.getElementById('restaurantCommission').value = state.settings.commission || 18;
+  document.getElementById('restaurantOpenTime').value = '09:00';
+  document.getElementById('restaurantCloseTime').value = '23:00';
+  document.getElementById('restaurantAutoHoursSwitch').classList.add('on');
+  document.getElementById('restaurantVerifiedSwitch').classList.add('on');
+  document.getElementById('restaurantFormSubmitBtn').textContent = 'Əlavə et';
+  document.getElementById('restaurantModal').classList.remove('hidden');
+  setTimeout(() => initRestaurantMiniMap(BAKU_CENTER.lat, BAKU_CENTER.lng), 150);
+});
+
+document.getElementById('restaurantVerifiedSwitch').addEventListener('click', (e) => {
+  e.currentTarget.classList.toggle('on');
+});
+
+document.getElementById('restaurantAutoHoursSwitch').addEventListener('click', (e) => {
+  e.currentTarget.classList.toggle('on');
+});
+
+function openRestaurantEditModal(id) {
+  const r = state.restaurants.find(x => x.id === id);
+  if (!r) return;
+  editingRestaurantId = id;
+  document.getElementById('restaurantModalTitle').textContent = 'Restoranı redaktə et';
+  document.getElementById('restaurantForm').reset();
+  document.getElementById('restaurantAuthFields').classList.add('hidden');
+  document.getElementById('restaurantEmail').required = false;
+  document.getElementById('restaurantPassword').required = false;
+  document.getElementById('restaurantName').value = r.name || '';
+  document.getElementById('restaurantPhone').value = r.phone || '';
+  document.getElementById('restaurantChain').value = r.chain || '';
+  document.getElementById('restaurantPhotoURL').value = r.photoURL || '';
+  document.getElementById('restaurantCommission').value = r.commission ?? 0;
+  document.getElementById('restaurantOpenTime').value = r.openTime || '09:00';
+  document.getElementById('restaurantCloseTime').value = r.closeTime || '23:00';
+  document.getElementById('restaurantAutoHoursSwitch').classList.toggle('on', r.autoHours !== false);
+  document.getElementById('restaurantVerifiedSwitch').classList.toggle('on', r.isVerified !== false);
+  document.getElementById('restaurantAddressText').value = r.restaurantAddress || '';
+  document.getElementById('restaurantFormSubmitBtn').textContent = 'Yadda saxla';
+  document.getElementById('restaurantModal').classList.remove('hidden');
+  const lat = r.restaurantLat || BAKU_CENTER.lat;
+  const lng = r.restaurantLng || BAKU_CENTER.lng;
+  setTimeout(() => initRestaurantMiniMap(lat, lng), 150);
+}
+
+document.getElementById('restaurantForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('restaurantFormSubmitBtn');
+  const originalText = btn.textContent;
+  setLoading(btn, true, originalText);
+
+  const name = document.getElementById('restaurantName').value.trim();
+  const phone = document.getElementById('restaurantPhone').value.trim();
+  const chain = document.getElementById('restaurantChain').value.trim();
+  const photoURL = document.getElementById('restaurantPhotoURL').value.trim();
+  const commission = parseFloat(document.getElementById('restaurantCommission').value) || 0;
+  const isVerified = document.getElementById('restaurantVerifiedSwitch').classList.contains('on');
+  const openTime = document.getElementById('restaurantOpenTime').value || '09:00';
+  const closeTime = document.getElementById('restaurantCloseTime').value || '23:00';
+  const autoHours = document.getElementById('restaurantAutoHoursSwitch').classList.contains('on');
+  const restaurantAddress = document.getElementById('restaurantAddressText').value.trim();
+  const restaurantLat = parseFloat(document.getElementById('restaurantLatInput').value) || BAKU_CENTER.lat;
+  const restaurantLng = parseFloat(document.getElementById('restaurantLngInput').value) || BAKU_CENTER.lng;
+  // Müştəri tətbiqinin geohash sorğusuna düşmək üçün hər yaradılan/koordinatı
+  // dəyişən restoranda bu sahə avtomatik hesablanıb yazılır (bax: yuxarıdakı encodeGeohash()).
+  const geohash = encodeGeohash(restaurantLat, restaurantLng, 9);
+
+  try {
+    if (editingRestaurantId) {
+      await updateDoc(doc(db, 'restaurants', editingRestaurantId), { name, phone, chain, photoURL, ...(currentUserRole === 'admin' ? { commission } : {}), isVerified, openTime, closeTime, autoHours, restaurantAddress, restaurantLat, restaurantLng, geohash });
+      toast('Restoran məlumatları yeniləndi', 'success');
+    } else {
+      const email = document.getElementById('restaurantEmail').value.trim();
+      const password = document.getElementById('restaurantPassword').value;
+      if (!requireAdmin()) return;
+      const uid = await createAuthAccountSilently(email, password);
+      await setDoc(doc(db, 'restaurants', uid), {
+        restaurantId: uid,
+        name, phone, email, chain, commission, isVerified, openTime, closeTime, autoHours, restaurantAddress, restaurantLat, restaurantLng, geohash,
+        role: 'restaurant', active: true, photoURL: photoURL || '', createdAt: serverTimestamp()
+      });
+      toast('Yeni restoran hesabı yaradıldı — indi Restoran Panelinə daxil ola bilər', 'success');
+    }
+    document.getElementById('restaurantModal').classList.add('hidden');
+    document.getElementById('restaurantForm').reset();
+  } catch (err) {
+    console.error(err);
+    let msg = 'Xəta baş verdi';
+    if (err.code === 'auth/email-already-in-use') msg = 'Bu e-poçt artıq istifadə olunub';
+    else if (err.code === 'auth/weak-password') msg = 'Şifrə ən azı 6 simvol olmalıdır';
+    else if (err.code === 'auth/invalid-email') msg = 'E-poçt formatı yanlışdır';
+    toast(msg, 'error');
+  } finally {
+    setLoading(btn, false, originalText);
+  }
+});
+
+/* ============================================================
+   YENİ İSTİFADƏÇİ (customer) YARATMA
+   ============================================================ */
+document.getElementById('openNewUserModalBtn').addEventListener('click', () => {
+  document.getElementById('userForm').reset();
+  document.getElementById('userModal').classList.remove('hidden');
+});
+
+document.getElementById('userForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const btn = document.getElementById('userFormSubmitBtn');
+  const originalText = btn.textContent;
+  setLoading(btn, true, originalText);
+
+  const email = document.getElementById('userEmail').value.trim();
+  const password = document.getElementById('userPassword').value;
+  const name = document.getElementById('userName').value.trim();
+  const surname = document.getElementById('userSurname').value.trim();
+  const phone = document.getElementById('userPhone').value.trim();
+
+  if (!requireAdmin()) return;
+  try {
+    const uid = await createAuthAccountSilently(email, password);
+    await setDoc(doc(db, 'users', uid), {
+      name, surname, phone, email, role: 'customer', createdAt: serverTimestamp()
+    });
+    toast('Yeni istifadəçi hesabı yaradıldı', 'success');
+    document.getElementById('userModal').classList.add('hidden');
+    document.getElementById('userForm').reset();
+  } catch (err) {
+    console.error(err);
+    let msg = 'Xəta baş verdi';
+    if (err.code === 'auth/email-already-in-use') msg = 'Bu e-poçt artıq istifadə olunub';
+    else if (err.code === 'auth/weak-password') msg = 'Şifrə ən azı 6 simvol olmalıdır';
+    toast(msg, 'error');
+  } finally {
+    setLoading(btn, false, originalText);
+  }
+});
+
+/* ============================================================
+   MƏHSULLAR (top-level 'products' kolleksiyası, ownerId ilə)
+   ============================================================ */
+let currentProductsRestaurantId = null;
+
+function openProductsModal(restaurantId) {
+  currentProductsRestaurantId = restaurantId;
+  const r = state.restaurants.find(x => x.id === restaurantId);
+  document.getElementById('productsModalTitle').textContent = `Menyu — ${r ? r.name : ''}`;
+  document.getElementById('productForm').reset();
+  document.getElementById('productDiscountSwitch').classList.remove('on');
+  document.getElementById('productDiscountFields').classList.add('hidden');
+  renderProductsList();
+  document.getElementById('productsModal').classList.remove('hidden');
+}
+
+document.getElementById('productDiscountSwitch').addEventListener('click', (e) => {
+  e.currentTarget.classList.toggle('on');
+  document.getElementById('productDiscountFields').classList.toggle('hidden', !e.currentTarget.classList.contains('on'));
+});
+function closeProductsModal() {
+  currentProductsRestaurantId = null;
+  document.getElementById('productsModal').classList.add('hidden');
+}
+window.closeProductsModal = closeProductsModal;
+
+function renderProductsList() {
+  const list = document.getElementById('productsList');
+  const items = state.products.filter(p => p.ownerId === currentProductsRestaurantId);
+  list.innerHTML = items.map(p => `
+    <div class="settings-row" style="padding:8px 2px;">
+      <div><h4 style="font-weight:600;">${esc(p.name)}</h4><p>${p.isDiscountActive ? `<s>${money(p.price)}</s> ${money(p.discountedPrice)} AZN (-${p.discountPercent}%)` : money(p.price) + ' AZN'} · ${esc(p.category || '—')}</p></div>
+      <button class="btn-ghost-danger admin-only" data-action="delete-product" data-id="${p.id}">Sil</button>
+    </div>
+  `).join('');
+  document.getElementById('productsEmptyState').classList.toggle('hidden', items.length > 0);
+}
+
+document.getElementById('productsList').addEventListener('click', async (e) => {
+  const btn = e.target.closest('[data-action="delete-product"]');
+  if (!btn) return;
+  if (!requireAdmin()) return;
+  if (!confirm('Bu məhsulu menyudan silmək istəyirsiniz?')) return;
+  try {
+    await deleteDoc(doc(db, 'products', btn.dataset.id));
+    toast('Məhsul silindi', 'info');
+  } catch (err) {
+    console.error(err);
+    toast('Silinmə mümkün olmadı', 'error');
+  }
+});
+
+document.getElementById('productForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (!currentProductsRestaurantId) return;
+  const name = document.getElementById('productName').value.trim();
+  const price = parseFloat(document.getElementById('productPrice').value) || 0;
+  const category = document.getElementById('productCategory').value;
+  const img = document.getElementById('productImg').value.trim();
+  const isDiscountActive = document.getElementById('productDiscountSwitch').classList.contains('on');
+  const discountPercent = isDiscountActive ? (parseFloat(document.getElementById('productDiscountPercent').value) || 0) : 0;
+  const discountedPrice = isDiscountActive ? (price - (price * discountPercent / 100)).toFixed(2) : '';
+  const r = state.restaurants.find(x => x.id === currentProductsRestaurantId);
+  try {
+    await addDoc(collection(db, 'products'), {
+      name, price,
+      unit: 'ədəd',
+      category,
+      chain: r ? (r.chain || r.name) : '',
+      ownerId: currentProductsRestaurantId,
+      restaurantId: currentProductsRestaurantId,
+      restaurantName: r ? r.name : '',
+      restaurantAddress: r ? r.restaurantAddress : '',
+      restaurantPhone: r ? r.phone : '',
+      restaurantLat: r ? r.restaurantLat : null,
+      restaurantLng: r ? r.restaurantLng : null,
+      isDiscountActive, discountPercent, discountedPrice,
+      rating: 5.0,
+      img: img || 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=600',
+      createdAt: Date.now()
+    });
+    toast('Məhsul menyuya əlavə edildi', 'success');
+    e.target.reset();
+    document.getElementById('productDiscountSwitch').classList.remove('on');
+    document.getElementById('productDiscountFields').classList.add('hidden');
+  } catch (err) {
+    console.error(err);
+    toast('Məhsul əlavə edilə bilmədi', 'error');
+  }
+});
+
+/* ============================================================
+   DƏSTƏK SİFARİŞİ YARATMA (admin adından manual sifariş)
+   ============================================================ */
+function populateOrderRestaurantSelect() {
+  const sel = document.getElementById('orderRestaurant');
+  if (!sel) return;
+  const currentVal = sel.value;
+  sel.innerHTML = '<option value="">Restoran seçin</option>' + state.restaurants
+    .filter(r => r.active)
+    .map(r => `<option value="${r.id}">${esc(r.name)}</option>`).join('');
+  if (currentVal) sel.value = currentVal;
+}
+
+let selectedOrderItems = [];
+
+document.getElementById('orderRestaurant').addEventListener('change', (e) => {
+  selectedOrderItems = [];
+  renderOrderMenuPicker(e.target.value);
+});
+
+function renderOrderMenuPicker(restaurantId) {
+  const wrap = document.getElementById('orderMenuPicker');
+  if (!restaurantId) { wrap.innerHTML = ''; return; }
+  const items = state.products.filter(p => p.ownerId === restaurantId);
+  if (items.length === 0) {
+    wrap.innerHTML = '<p class="hint">Bu restoranın menyusunda məhsul yoxdur.</p>';
+    return;
+  }
+  wrap.innerHTML = `<label style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px;display:block;">Məhsullar</label>` +
+    items.map(p => `
+      <div class="settings-row" style="padding:6px 2px;">
+        <div><h4 style="font-weight:600;font-size:13.5px;">${esc(p.name)}</h4><p>${money(p.price)} AZN</p></div>
+        <input type="number" min="0" value="0" style="width:64px;padding:6px;border-radius:8px;border:1px solid var(--border);" data-product-id="${p.id}" data-product-name="${esc(p.name)}" data-product-price="${p.price}" class="order-item-qty">
+      </div>
+    `).join('');
+  wrap.querySelectorAll('.order-item-qty').forEach(inp => inp.addEventListener('input', updateOrderTotal));
+  updateOrderTotal();
+}
+
+function updateOrderTotal() {
+  const qtyInputs = document.querySelectorAll('.order-item-qty');
+  let itemsTotal = 0;
+  selectedOrderItems = [];
+  qtyInputs.forEach(inp => {
+    const qty = parseInt(inp.value) || 0;
+    if (qty > 0) {
+      const price = parseFloat(inp.dataset.productPrice);
+      for (let i = 0; i < qty; i++) {
+        selectedOrderItems.push({ name: inp.dataset.productName, price });
+      }
+      itemsTotal += price * qty;
+    }
+  });
+  const deliveryFee = parseFloat(document.getElementById('orderDeliveryFee').value) || 0;
+  document.getElementById('orderTotalHint').textContent = `Ümumi məbləğ: ${money(itemsTotal + deliveryFee)} AZN (${selectedOrderItems.length} məhsul)`;
+}
+document.getElementById('orderDeliveryFee').addEventListener('input', updateOrderTotal);
+
+document.getElementById('openNewOrderModalBtn').addEventListener('click', () => {
+  document.getElementById('orderForm').reset();
+  selectedOrderItems = [];
+  document.getElementById('orderMenuPicker').innerHTML = '';
+  document.getElementById('orderZoneHint').textContent = '';
+  populateOrderRestaurantSelect();
+  document.getElementById('orderModal').classList.remove('hidden');
+});
+
+document.getElementById('calcZoneFeeBtn').addEventListener('click', async () => {
+  const hint = document.getElementById('orderZoneHint');
+  const btn = document.getElementById('calcZoneFeeBtn');
+  const restaurantId = document.getElementById('orderRestaurant').value;
+  const restaurant = state.restaurants.find(r => r.id === restaurantId);
+  const address = document.getElementById('orderCustomerAddress').value.trim();
+
+  if (!restaurant) { toast('Əvvəlcə restoran seçin', 'error'); return; }
+  if (!restaurant.restaurantLat || !restaurant.restaurantLng) { toast('Seçilmiş restoranın xəritə koordinatı yoxdur', 'error'); return; }
+  if (!address) { toast('Əvvəlcə çatdırılma ünvanını daxil edin', 'error'); return; }
+  if (!state.settings.deliveryZones || state.settings.deliveryZones.length === 0) {
+    toast('Əvvəlcə Parametrlər səhifəsində çatdırılma zonalarını təyin edin', 'error');
+    return;
+  }
+
+  setLoading(btn, true, 'Məsafəyə görə hesabla');
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&countrycodes=az&q=${encodeURIComponent(address)}`);
+    const results = await res.json();
+    if (!results || results.length === 0) {
+      hint.textContent = '';
+      toast('Ünvan tapılmadı — haqqı əl ilə daxil edin', 'error');
+      return;
+    }
+    const custLat = parseFloat(results[0].lat);
+    const custLng = parseFloat(results[0].lon);
+    const km = distanceKm(restaurant.restaurantLat, restaurant.restaurantLng, custLat, custLng);
+    const zone = zoneForDistance(km);
+    if (!zone) {
+      hint.textContent = '';
+      toast('Uyğun zona tapılmadı', 'error');
+      return;
+    }
+    document.getElementById('orderDeliveryFee').value = zone.fee;
+    hint.textContent = `Məsafə: ~${km.toFixed(1)} km — Zona: ${zone.name} (${money(zone.fee)} AZN)`;
+    updateOrderTotal();
+    toast('Haqq zonaya əsasən təyin edildi', 'success');
+  } catch (err) {
+    console.error(err);
+    toast('Məsafə hesablanarkən xəta baş verdi', 'error');
+  } finally {
+    setLoading(btn, false, 'Məsafəyə görə hesabla');
+  }
+});
+
+document.getElementById('orderForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  if (selectedOrderItems.length === 0) { toast('Ən azı bir məhsul seçin', 'error'); return; }
+  const restaurantId = document.getElementById('orderRestaurant').value;
+  const restaurant = state.restaurants.find(r => r.id === restaurantId);
+  if (!restaurant) { toast('Restoran seçin', 'error'); return; }
+
+  const deliveryFee = parseFloat(document.getElementById('orderDeliveryFee').value) || 0;
+  const itemsTotal = selectedOrderItems.reduce((s, i) => s + i.price, 0);
+  const paymentMethod = document.getElementById('orderPaymentMethod').value;
+
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setLoading(submitBtn, true, 'Yarat');
+  try {
+    await addDoc(collection(db, 'orders'), {
+      customerName: document.getElementById('orderCustomer').value.trim(),
+      customerPhone: document.getElementById('orderCustomerPhone').value.trim(),
+      customerAddress: document.getElementById('orderCustomerAddress').value.trim(),
+      restaurantId: restaurant.id,
+      restaurantName: restaurant.name,
+      restaurantPhone: restaurant.phone || '',
+      restaurantAddress: restaurant.restaurantAddress || '',
+      restaurantLat: restaurant.restaurantLat || null,
+      restaurantLng: restaurant.restaurantLng || null,
+      items: selectedOrderItems,
+      deliveryFee,
+      totalAmount: itemsTotal + deliveryFee,
+      paymentMethod,
+      paymentMethodLabel: paymentMethod === 'cash' ? 'Nağd' : 'Kart',
+      status: 'preparing',
+      restaurantAccepted: false,
+      progress: 20,
+      note: '(Admin panelindən dəstək sifarişi olaraq yaradılıb)',
+      createdAt: serverTimestamp()
+    });
+    toast('Sifariş yaradıldı — restoranın panelinə göndərildi', 'success');
+    document.getElementById('orderModal').classList.add('hidden');
+    document.getElementById('orderForm').reset();
+  } catch (err) {
+    console.error(err);
+    toast('Sifariş yaradıla bilmədi', 'error');
+  } finally {
+    setLoading(submitBtn, false, 'Yarat');
+  }
+});
+
+/* ============================================================
+   MANUAL ƏMƏLİYYAT QEYDİ (ödənişlər səhifəsi)
+   ============================================================ */
+document.getElementById('openNewTxnModalBtn').addEventListener('click', () => {
+  document.getElementById('transactionForm').reset();
+  document.getElementById('transactionModal').classList.remove('hidden');
+});
+
+document.getElementById('txnMethod').addEventListener('change', (e) => {
+  document.getElementById('txnDetailLabel').textContent = e.target.value === 'bank' ? 'IBAN' : 'Kart nömrəsi';
+  document.getElementById('txnDetail').placeholder = e.target.value === 'bank' ? 'AZ00 NABZ 0000 0000 0000 0000 0000' : '4169 XXXX XXXX 1234';
+});
+
+document.getElementById('transactionForm').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const submitBtn = e.target.querySelector('button[type="submit"]');
+  setLoading(submitBtn, true, 'Əlavə et');
+  try {
+    await addDoc(collection(db, 'transactions'), {
+      party: document.getElementById('txnParty').value.trim(),
+      amount: parseFloat(document.getElementById('txnAmount').value) || 0,
+      method: document.getElementById('txnMethod').value,
+      detail: document.getElementById('txnDetail').value.trim(),
+      status: document.getElementById('txnStatus').value,
+      dateLabel: new Date().toLocaleDateString('az-AZ'),
+      createdAt: serverTimestamp()
+    });
+    toast('Əməliyyat qeydə alındı', 'success');
+    document.getElementById('transactionModal').classList.add('hidden');
+    document.getElementById('transactionForm').reset();
+  } catch (err) {
+    console.error(err);
+    toast('Xəta baş verdi', 'error');
+  } finally {
+    setLoading(submitBtn, false, 'Əlavə et');
+  }
+});
+
+/* ============================================================
+   CANLI XƏRİTƏ — real kuryer GPS + restoran yerləri
+   ============================================================ */
+let courierMap = null;
+let mapMarkers = [];
+
+function ensureMapInitialized() {
+  if (courierMap) { courierMap.invalidateSize(); renderMapMarkers(); return; }
+  courierMap = L.map('courierMap', { attributionControl: false }).setView([BAKU_CENTER.lat, BAKU_CENTER.lng], 12);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', { maxZoom: 19 }).addTo(courierMap);
+  renderMapMarkers();
+}
+
+function courierDivIcon(online) {
+  return L.divIcon({
+    className: '', html: `<div style="width:16px;height:16px;border-radius:50%;background:${online ? '#16A34A' : '#9CA3AF'};border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);"></div>`,
+    iconSize: [16,16], iconAnchor: [8,8]
+  });
+}
+function restaurantDivIcon() {
+  return L.divIcon({
+    className: '', html: `<div style="width:14px;height:14px;border-radius:4px;background:#FF5722;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.3);"></div>`,
+    iconSize: [14,14], iconAnchor: [7,7]
+  });
+}
+
+function renderMapMarkers() {
+  if (!courierMap) return;
+  mapMarkers.forEach(m => courierMap.removeLayer(m));
+  mapMarkers = [];
+
+  let plotted = 0;
+  state.couriers.forEach(c => {
+    const lat = parseFloat(c.lat), lng = parseFloat(c.lng);
+    if (isNaN(lat) || isNaN(lng) || !lat || !lng) return;
+    const online = c.status === 'online';
+    const marker = L.marker([lat, lng], { icon: courierDivIcon(online) })
+      .bindPopup(`<b>${esc(c.name||'')} ${esc(c.surname||'')}</b><br>${online ? 'Onlayn' : 'Oflayn'} · ${esc(c.phone||'')}`)
+      .addTo(courierMap);
+    mapMarkers.push(marker);
+    plotted++;
+  });
+
+  state.restaurants.forEach(r => {
+    const lat = parseFloat(r.restaurantLat), lng = parseFloat(r.restaurantLng);
+    if (isNaN(lat) || isNaN(lng) || !lat || !lng) return;
+    const marker = L.marker([lat, lng], { icon: restaurantDivIcon() })
+      .bindPopup(`<b>${esc(r.name)}</b><br>${esc(r.restaurantAddress||'')}`)
+      .addTo(courierMap);
+    mapMarkers.push(marker);
+  });
+
+  document.getElementById('mapEmpty').classList.toggle('hidden', plotted > 0 || state.restaurants.length > 0);
+}
+
+/* ============================================================
+   İLKİN YÜKLƏMƏ
+   ============================================================ */
+document.getElementById('loginEmail').focus();
+</script>
+</body>
+</html>
